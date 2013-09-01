@@ -2,31 +2,67 @@
    MasterClock - Drives a slave clock using the Internation Business Machine Time Protocols,
   Service Instructions No. 222, April 1, 1938,Form 231-8920
 */
+
+//_____________________________________________________________________
+//                                                             INCLUDES
 #include "Arduino.h"
+#include <stdarg.h>
+#include "console.h"
 #include "clock_generic.h"
-#ifndef LOW
-	#define LOW	0
-	#define HIGH	1
-#endif
 
-static int m, s ;
-int a = LOW , b = LOW ;
-int aForce = 0 ;
-int bForce = 0 ;
 
-void syncTime() ;
+//_____________________________________________________________________
+//                                                           LOCAL VARS
 
-int tick = 0;
+static int m, s ;              ///< Current minutes and seconds
+int a = LOW , b = LOW ;        ///< Desired A and B signal levels
+int aForce = 0 ;               ///< Force A pulse by operator control
+int bForce = 0 ;               ///< Force B pulse by operator control
+static int tick = 0;           ///< The number of ticks since we started
+
+
+typedef enum State {
+	rise ,                 // Rising edge of pulse
+	riseWait ,             // Wait for pulse-rise time
+	fall ,                 // Falling edge of pulse
+	fallWait ,             // Wait for pulse-fall time
+} State ;
+
+State state = rise ;           ///< Protocol chain state tracker.
+
+//_____________________________________________________________________
+//                                                            CONSTANTS
+
+// Signal output duration, in 10ms ticks
+enum {
+	riseTime = 6 ,     // 600ms rise time
+	fallTime = 4 ,     // 400ms fall time
+} ;
+
+
+//_____________________________________________________________________
+// Increment the tick counter.  This is called once every 100ms by the
+// hardware interrupt or main executive function.
 void ticker() {
   ++tick;
 }
 
+//_____________________________________________________________________
+// Tick accessors.  Because the 'tick' variable is modified during a
+// hardware interrupt, it is not safe to read or write this variable
+// outside of the interrupt routine unless we disable interrupts
+// first.  These functions provide safe access to the tick variable.
+
+//_____________________________________
+// Advance the tick variable by 'adjust' ticks.
 void setTick(int adjust) {
   noInterrupts() ;
   tick += adjust ;
   interrupts();
 }
 
+//_____________________________________
+// Read the current tick variable.
 int getTick() {
   noInterrupts() ;
   int x = tick ;
@@ -34,29 +70,60 @@ int getTick() {
   return x;
 }
 
-#include <stdarg.h>
-void p(char *fmt, ... ){
-        char tmp[128]; // resulting string limited to 128 chars
-        va_list args;
-        va_start (args, fmt );
-        vsnprintf(tmp, 128, fmt, args);
-        va_end (args);
-        sendString(tmp);
+//_____________________________________
+// Reset the tick counter to 0
+void syncTime() {
+  setTick( -getTick() ) ;
+  state = rise ;
 }
 
-void showTime() {
-  p("\n%c%c %02u:%02u   " , (a?'A':' ') , (b?'B':' '), m, s );
+//_____________________________________________________________________
+// Time accessors
+// Let other functions get and set the clock time
+
+int getMinutes() { return m; }
+int getSeconds() { return s; }
+
+void setMinutes( int minutes ) { m = minutes ; }
+void setSeconds( int seconds ) { s = seconds ; }
+
+void incMinutes( ) { if (++m > 59) m = 0 ; }
+void incSeconds( ) { if (++s > 59) { s = 0 ; incMinutes() ; } }
+
+void decMinutes( ) { if (--m < 0) m = 59 ; }
+void decSeconds( ) { if (--s < 0) { s = 59 ; decMinutes() ; } }
+
+//_____________________________________________________________________
+// Signal accessors
+// Let callers force A and B pulses
+
+void sendPulseA() { ++aForce ; }
+void sendPulseB() { ++bForce ; }
+
+bool getA() { return a ; }        // Read the last A-signal level
+bool getB() { return b ; }        // Read the last B-signal level
+
+//_____________________________________________________________________
+//                                                        TIME PROTOCOL
+//
+// These functions actually implement the time protocol.
+
+//_____________________________________
+// Called once per second.  Advances second and minute counters.
+void markTime()
+{
+    incSeconds() ;
 }
 
-void markTime() {
-  ++s ;
-  if ( s >59 ) {
-    s = 0 ;
-    ++m ;
-  }
-  if ( m > 59 ) m = 0;
-}
-
+//_____________________________________
+// Implement the A-signal protocol.
+// Returns HIGH or LOW depending on what the A-signal output should
+// based on the current time.
+//
+// The 'A' signal is raised once per minute at zero-seconds, and on
+// every odd second between 10 and 50 during the 59th minute.
+//
+// Note: If 'aForce' is non-zero, return HIGH.
 int checkA() {
     // Manual run based on serial input
     if ( aForce ) { aForce-- ; return HIGH ; }
@@ -73,6 +140,15 @@ int checkA() {
     return LOW ;
 }
 
+//_____________________________________
+// Implement the B-signal protocol.
+// Returns HIGH or LOW depending on what the B-signal output should
+// based on the current time.
+//
+// The 'B' signal is raised once per minute at zero-seconds for each
+// minute except for minutes 50 to 59.
+//
+// Note: If 'bForce' is non-zero, return HIGH.
 int checkB() {
     // Manual run based on serial input
     if ( bForce ) { bForce-- ; return HIGH ; }
@@ -84,141 +160,10 @@ int checkB() {
     return LOW ;
 }
 
-static bool timeEntryMode = false ;
-
-bool timeEntry( char ch ) {
-static char buf[10] ;
-static int ibuf = 0 ;
-
-  buf[ibuf]   = 0 ;
-
-  // Read the time input from the serial port
-  if ( isdigit(ch) || ch == ':' )
-  {
-
-    if ( ibuf < sizeof(buf)-1 )
-      buf[ibuf++] = ch ;
-
-    buf[ibuf] = 0 ;
-    return false ;
-  }
-
-  switch ( ch ) {
-    case 27 : case 3: ibuf = 0 ; timeEntryMode = false ; return false ;
-    case 8  : if ( ibuf > 0 ) buf[--ibuf] = '\0'; return false ;
-  }
-
-  timeEntryMode = false ;
-  if ( ibuf == 0 ) return false ;
-
-  p ("    time=%s ", buf);
-
-  // interpret the time we have accumulated from the user
-  int m0 = -1 ;
-  int s0 = -1 ;
-  char *pp = buf ;
-
-  // Find any colon the user entered
-  for ( ; *pp && *pp != ':' ; pp++ ) ;
-
-  // :00    pp == buf
-  // 0000   *(pp+1) == 0 && ibuf > 2
-  // 00:    *(pp+1) == 0
-  // 00:00  *pp=':'
-
-  if ( *pp==':' ) {
-    // nn:...  User entered minutes value
-    if ( pp > buf ) m0 = atoi(buf) ;
-
-    // :nn  User entered seconds value after colon
-    if ( pp[1]>0 ) s0 = atoi(pp+1);
-  }
-  else {
-    s0 = atoi(buf) ;
-    if ( ibuf > 2 ) {
-      m0 = s0 / 100 ;
-      s0 %= 100 ;
-    }
-  }
-
-  ibuf = 0 ;
-
-  if ( m0 > 59 || s0 > 59 )
-  {
-    p("  ** Bad time input ** ");
-    return false ;
-  }
-
-  if ( s0 >= 0 ) syncTime() ;
-  if ( m0 < 0 ) m0 = m ;
-  if ( s0 < 0 ) s0 = s ;
-
-  m = m0 ; s = s0 ;
-
-  return true ;
-}
-
-bool controlMode( char ch ) {
-    switch ( ch ) {
-
-    // PLUS advances the digital clock minute
-    case '+': case '=': if (++m > 59) m=0 ; return true ;
-
-    // MINUS decrements the digital clock minute
-    case '_': case '-': if (--m < 0) m=59 ; return true ;
-
-    // 'Z' resets the digital clock seconds
-    case 'z': case 'Z': s = 0 ; syncTime() ; return true ;
-
-    // A, B and C manually force the A/B output pulses but do not affect the internal clock
-    // A and B add to the force count for the A and B signals.  C adds to both signals.
-    case 'A': case 'a': ++aForce ;            break ;
-    case 'B': case 'b':            ++bForce ; break ;
-    case 'C': case 'c': ++aForce ; ++bForce ; break ;
-  }
-  return false ;
-}
-
-void serialControl() {
-  char ch ;
-  bool timeChange = false ;
-
-  ch = readKey();
-  if ( ch < 1 ) return ;
-
-  if ( isdigit(ch) || ch == ':' ) timeEntryMode = true ;
-
-  if ( timeEntryMode )
-  {
-    if ( timeEntry( ch ) )
-    {
-      timeEntryMode = false ;
-      timeChange = true ;
-    }
-  }
-
-  timeChange |= controlMode(ch) ;
-
-  if ( timeChange ) { p(" -> %02d:%02d ", m, s);  }
-}
-
-typedef enum State { riseWait , rise, fallWait , fall } State ;
-State state = rise ;
-
-// Signal output duration, in 10ms ticks
-enum {
-	riseTime = 6 ,     // 600ms rise time
-	fallTime = 4 ,     // 400ms fall time
-} ;
-
-void syncTime() {
-  setTick( -getTick() ) ;
-  state = rise ;
-}
-
+//_____________________________________
 // the service routine runs over and over again forever:
 void service() {
-  serialControl() ;
+  consoleService() ;
 
   switch (state) {
   default:
@@ -241,7 +186,7 @@ void service() {
 
   case fall:
     sendSignal( LOW , LOW ) ;     // End output pulses
-    p("%s", (a||b)?"off ":"");
+    showSignalDrop() ;
 
     state = fallWait;
     break;

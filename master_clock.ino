@@ -31,6 +31,17 @@ char readKey()
   return (char) Serial.read();
 }
 
+int us_per_tick = 100000 ;
+void speedUp() {
+  us_per_tick /= 2 ;
+  Timer1.setPeriod(us_per_tick);    // Adjust tick speed
+}
+
+void slowDown() {
+  us_per_tick *= 2 ;
+  Timer1.setPeriod(us_per_tick);    // Adjust tick speed
+}
+
 // the setup routine runs once when you press reset:
 void setup() {
   Serial.begin(9600);
