@@ -87,6 +87,7 @@ int main ( int argc , char ** argv )
 {
 	init_keyboard();
 	timerInit() ;
+	clockSetup();
 
 	while ( !quit )
 	{

@@ -53,7 +53,7 @@ void sendSignal( int a, int b) ;
 // all the "work" of the program.
 
 void service() ;
-
+void clockSetup();
 
 //________________________________________________________________
 // Time accessors

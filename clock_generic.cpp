@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include "console.h"
 #include "clock_generic.h"
-
+#include "ntp.h"
 
 //_____________________________________________________________________
 //                                                           LOCAL VARS
@@ -160,10 +160,39 @@ int checkB() {
     return LOW ;
 }
 
+void checkNtp() {
+    static bool needResponse = false ;
+
+    // Give up after waiting too long
+    if ( m == 2 ) needResponse = false ;
+
+    if ( m == 58 && !needResponse ) {
+	    // Read the NTP server once per hour
+	    sendNtpRequest() ;
+	    needResponse = true ;
+    }
+
+    if ( needResponse ) {
+	    int mm, ss ;
+	    bool success = readNtpResponse( &mm , &ss ) ;
+	    if ( success ) {
+		    p("\nNTP Server: adjusting time by %d seconds.\n" ,  (mm*60 + ss ) - (m*60+s) ) ;
+		    setMinutes(mm) ;
+		    setSeconds(ss) ;
+		    needResponse = false ;
+	    }
+    }
+}
+
+void clockSetup() {
+	ntpSetup() ;
+}
+
 //_____________________________________
 // the service routine runs over and over again forever:
 void service() {
   consoleService() ;
+  checkNtp() ;
 
   switch (state) {
   default:

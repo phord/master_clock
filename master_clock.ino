@@ -50,6 +50,7 @@ void setup() {
   pinMode(ledB, OUTPUT);
   Timer1.initialize(100000);         // initialize timer1 to 100ms period
   Timer1.attachInterrupt(ticker);    // attach timer overflow interrupt
+  clockSetup() ;
 }
 
 // the loop routine runs over and over again forever:

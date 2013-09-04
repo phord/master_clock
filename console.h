@@ -11,3 +11,6 @@ void showSignalDrop() ;
 // Read/write to console user interface
 // Call this "service" routine frequently to allow user input and console output.
 void consoleService() ;
+
+// printf-like function for serial port or console
+void p(const char *fmt, ... );

@@ -13,7 +13,7 @@
 
 //_____________________________________________________________________
 // Print formatted text to the console.
-static void p(const char *fmt, ... ){
+void p(const char *fmt, ... ){
         char tmp[128]; // resulting string limited to 128 chars
         va_list args;
         va_start (args, fmt );
