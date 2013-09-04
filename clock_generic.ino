@@ -170,32 +170,68 @@ int checkB() {
     return LOW ;
 }
 
+typedef enum Ntp_State {
+    ntp_idle ,   	///< NTP is waiting to be triggered
+    ntp_request , 	///< Sending NTP request
+    ntp_response ,      ///< Waiting for NTP response
+    ntp_completed ,     ///< NTP completed; waiting for reset
+    ntp_oneshot ,       ///< Try a short NTP request (manual intervention)
+} Ntp_State ;
+
+static Ntp_State ntpState = ntp_idle ;
+
+void triggerNtp() {
+	ntpState = ntp_oneshot ;
+}
+
 void checkNtp() {
-    static bool needResponse = false ;
+    static int ntpResponseTimeout = 0 ;
+    static int retries ;
 
-    // Give up after waiting too long
-    if ( m == 2 ) needResponse = false ;
+//	p("\r%d:  %d  %d  %d    ", ntpState , realTick, ntpResponseTimeout , retries ) ;
+    switch ( ntpState ) {
+    case ntp_idle :
+        retries = 30 ;
+        if ( m == 58 ) ntpState = ntp_request ;
+        break ;
 
-    if ( m == 58 && !needResponse ) {
-	    // Read the NTP server once per hour
-	    sendNtpRequest() ;
-	    needResponse = true ;
-    }
+    case ntp_oneshot:
+        retries = 3 ;
 
-    if ( needResponse ) {
-	    int mm, ss ;
+    case ntp_request :
+	p("NTP Request\n");
+        sendNtpRequest() ;
+	ntpResponseTimeout = getFuture( 10 ) ;  	// timeout if we don't get a response in 10 seconds
+	ntpState = ntp_response ;
+        break ;
+
+    case ntp_response :
+        if ( expired(ntpResponseTimeout) ) {
+            ntpState = ntp_request ;
+	    if ( --retries < 0 ) ntpState = ntp_completed ;
+        }
+	else
+	{
+            int mm, ss ;
 	    bool success = readNtpResponse( &mm , &ss ) ;
 	    if ( success ) {
-		    p("\nNTP Server: adjusting time by %d seconds.\n" ,  (mm*60 + ss ) - (m*60+s) ) ;
-		    setMinutes(mm) ;
-		    setSeconds(ss) ;
-		    needResponse = false ;
+	        p("\nNTP Server: adjusting time by %d seconds.\n" ,  (mm*60 + ss ) - (m*60+s) ) ;
+	        setMinutes(mm) ;
+	        setSeconds(ss) ;
+	        ntpState = ntp_completed ;
 	    }
+	}
+        break ;
+
+    case ntp_completed :
+	if ( m == 2 ) ntpState = ntp_idle ;
+        break ;
     }
 }
 
 void clockSetup() {
 	ntpSetup() ;
+	triggerNtp() ;
 }
 
 //_____________________________________

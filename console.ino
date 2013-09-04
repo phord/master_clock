@@ -132,10 +132,14 @@ bool timeEntry( char ch ) {
   return true ;
 }
 
+void triggerNtp();
 //_____________________________________
 // Read user input and act on it
 bool controlMode( char ch ) {
     switch ( ch ) {
+
+    // 'N' triggers the NTP protocol manually
+    case 'N': case 'n': triggerNtp() ; return true ;
 
     // Left-arrow (Less-Than) slows down the clock for simulation runs
     case '<': case ',': slowDown() ; return true ;
