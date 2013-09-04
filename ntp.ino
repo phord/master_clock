@@ -50,7 +50,6 @@ bool readNtpResponse( int *minutes , int * seconds ) {
     // combine the four bytes (two words) into a long integer
     // this is NTP time (seconds since Jan 1 1900):
     unsigned long secsSince1900 = highWord << 16 | lowWord;
-    p("Seconds since Jan 1 1900 = %lu\n" , secsSince1900);
 
     // now convert NTP time into everyday time:
     // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
@@ -58,13 +57,12 @@ bool readNtpResponse( int *minutes , int * seconds ) {
     // subtract seventy years:
     unsigned long epoch = secsSince1900 - seventyYears;
     // print Unix time:
-    p("Unix time = %u\n", epoch);
 
-    // print the hour, minute and second:
-    p("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
-    p("%02u", (epoch  % 86400L) / 3600); // print the hour (86400 equals secs per day)
-    p(":%02u", *minutes=((epoch  % 3600) / 60)); // print the minute (3600 equals secs per minute)
-    p(":%02u", *seconds=(epoch %60)); // print the second
+    int hours = (epoch  % 86400L) / 3600 ;
+    *minutes  = (epoch  % 3600) / 60;
+    *seconds  = epoch % 60;
+
+    p("NTP time = %02u:%02u:%02u UTC\n", hours , *minutes, *seconds ); // print the time
 
     return true ;
 }
