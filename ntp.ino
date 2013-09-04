@@ -23,7 +23,7 @@
 
  */
 
-#include "myUdp.h"
+#include "Udp.h"
 #include "console.h"
 
 unsigned char timeServer[] = {132, 163, 4, 101}; // time-a.timefreq.bldrdoc.gov NTP server
