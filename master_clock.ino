@@ -8,15 +8,14 @@
 //#include "clock_generic.c"
 
 
-// Pin 13 has an LED connected on most Arduino boards.
-// give it a name:
-int ledA = 13;
-int ledB = 12;
+// A and B signal pins
+int pulseA = 9;
+int pulseB = 8;
 
 void sendSignal( int a, int b)
 {
-    digitalWrite(ledA, a);   // Send A pulses
-    digitalWrite(ledB, b);   // Send B pulses
+  digitalWrite(pulseA, a);   // Send A pulses
+  digitalWrite(pulseB, b);   // Send B pulses
 }
 
 void sendString( const char * str )
