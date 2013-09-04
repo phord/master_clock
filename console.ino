@@ -38,7 +38,7 @@ static bool timeEntryMode = false ;
 // Parse time values input by the user
 bool timeEntry( char ch ) {
   static char buf[10] ;          ///< Collect the entered time string
-  static int ibuf = 0 ;          ///< Count number of entered characters
+  static unsigned int ibuf = 0 ; ///< Count number of entered characters
 
   buf[ibuf]   = 0 ;              ///< Zero-terminate the string so far
 

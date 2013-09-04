@@ -24,7 +24,7 @@
 byte mac[] = {
   0x00, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 
-IPAddress *timeServer = NULL ;
+IPAddress *timeServerAddress = NULL ;
 unsigned int localPort = 8888;      // local port to listen for UDP packets
 unsigned int serverPort = 0 ;
 
@@ -40,16 +40,17 @@ void udpSetup(unsigned char* addr , unsigned int port )
     return ;
   }
   Udp.begin(localPort);
-  timeServer = new IPAddress( addr[0], addr[1], addr[2], addr[3]);
+  timeServerAddress = new IPAddress( addr[0], addr[1], addr[2], addr[3]);
   serverPort = port ;
   active = true;
 }
 
 int sendUdp( char * data, int size )
 {
-  Udp.beginPacket(*timeServer, serverPort);
-  Udp.write(data,size);
+  Udp.beginPacket(*timeServerAddress, serverPort);
+  byte count = Udp.write((const unsigned char *)data,size);
   Udp.endPacket();
+  return (int) count ;
 }
 
 int readUdp( char * buf, int size )

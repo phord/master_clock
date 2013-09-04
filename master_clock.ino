@@ -31,7 +31,7 @@ char readKey()
   return (char) Serial.read();
 }
 
-int us_per_tick = 100000 ;
+unsigned long us_per_tick = 100000 ;
 void speedUp() {
   us_per_tick /= 2 ;
   Timer1.setPeriod(us_per_tick);    // Adjust tick speed

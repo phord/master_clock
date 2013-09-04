@@ -1,5 +1,8 @@
-all:
-	g++ -I . -I pc pc/pc.c pc/kbhit.c pc/udp.cpp clock_generic.cpp console.cpp ntp.cpp
 
-mingw:
-	i586-mingw32msvc-g++ -I . -I pc pc/pc.c pc/kbhit.c clock_generic.cpp console.cpp
+.INTERMEDIATE:  clock_generic.cpp console.cpp ntp.cpp
+
+%.cpp: %.ino
+	cp $< $@
+
+all: pc/pc.c pc/kbhit.c pc/udp.cpp clock_generic.cpp console.cpp ntp.cpp
+	g++ -I . -I pc $^ -o clock
