@@ -18,10 +18,11 @@ static int m, s ;              ///< Current minutes and seconds
 int a = LOW , b = LOW ;        ///< Desired A and B signal levels
 int aForce = 0 ;               ///< Force A pulse by operator control
 int bForce = 0 ;               ///< Force B pulse by operator control
-static int tick = 0;           ///< The number of ticks since we started
+static int realTick = 0;       ///< The number of ticks since we started
 
 
 typedef enum State {
+	reset ,                // Reset ticker to 0 to sync with exact second
 	rise ,                 // Rising edge of pulse
 	riseWait ,             // Wait for pulse-rise time
 	fall ,                 // Falling edge of pulse
@@ -44,37 +45,46 @@ enum {
 // Increment the tick counter.  This is called once every 100ms by the
 // hardware interrupt or main executive function.
 void ticker() {
-  ++tick;
+  ++realTick;
 }
 
 //_____________________________________________________________________
-// Tick accessors.  Because the 'tick' variable is modified during a
+// Tick accessor.  Because the 'tick' variable is modified during a
 // hardware interrupt, it is not safe to read or write this variable
 // outside of the interrupt routine unless we disable interrupts
 // first.  These functions provide safe access to the tick variable.
 
 //_____________________________________
-// Advance the tick variable by 'adjust' ticks.
-void setTick(int adjust) {
-  noInterrupts() ;
-  tick += adjust ;
-  interrupts();
-}
-
-//_____________________________________
 // Read the current tick variable.
 int getTick() {
   noInterrupts() ;
-  int x = tick ;
+  int x = realTick ;
   interrupts();
   return x;
 }
 
 //_____________________________________
+// Read number of elapsed ticks relative to timer variable
+int elapsed( int timer ) {
+  return getTick() - timer ;
+}
+
+//_____________________________________
+// Return a timer tick from some point in the future
+int getFuture( int nSeconds ) {
+  return getTick() + nSeconds * 10 ;
+}
+
+//_____________________________________
+// Test if a timer has expired (is in the past)
+bool expired( int timer ) {
+  return elapsed(timer) >= 0;
+}
+
+//_____________________________________
 // Reset the tick counter to 0
 void syncTime() {
-  setTick( -getTick() ) ;
-  state = rise ;
+  state = reset ;
 }
 
 //_____________________________________________________________________
@@ -191,11 +201,14 @@ void clockSetup() {
 //_____________________________________
 // the service routine runs over and over again forever:
 void service() {
+  static int subTimer = 0;       ///< State counter per second
   consoleService() ;
   checkNtp() ;
 
   switch (state) {
   default:
+  case reset:
+    subTimer = getTick() ;
   case rise:
     a = checkA() ;
     b = checkB() ;
@@ -208,8 +221,8 @@ void service() {
     break ;
 
   case riseWait:
-    if ( getTick() < riseTime ) break ;
-    setTick(-riseTime);
+    if ( elapsed(subTimer) < riseTime ) break ;
+    subTimer += riseTime ;
     state = fall;
     break;
 
@@ -221,8 +234,8 @@ void service() {
     break;
 
   case fallWait:
-    if ( getTick() < fallTime ) break ;
-    setTick(-fallTime);
+    if ( elapsed(subTimer) < fallTime ) break ;
+    subTimer += fallTime ;
 
     markTime() ;                 // Advance time
 
