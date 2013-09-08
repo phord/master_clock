@@ -42,14 +42,34 @@ bool readNtpResponse( int *minutes , int * seconds ) {
   int readBytes = readUdp( (char *)packetBuffer, sizeof(packetBuffer) ) ;
   if ( ! readBytes ) return false ;
 
+    p("NTP: Received %u byte packet\n", readBytes);
+    p("------------------------------------------------------------------------------\n");
+    for (int i = 0 ; i < readBytes ; i++ ) {
+        p("%02X " , packetBuffer[i]) ;
+        int n=i+1;
+        if ( n == readBytes || (n%32)==0 ) p("\n");
+        else if ((n%16)==0 ) p("- ");
+    }
+    p("------------------------------------------------------------------------------\n");
+
+    if ( readBytes < 48 ) {
+        p("Packet too short.\n");
+        return  false ;
+    }
+
+    p("Reference clock: %.*s\n", 4, packetBuffer+12 );
+
     //the timestamp starts at byte 40 of the received packet and is four bytes,
     // or two words, long. First, esxtract the two words:
 
-    unsigned long highWord = (packetBuffer[40]<<8 ) + packetBuffer[41];
-    unsigned long lowWord  = (packetBuffer[42]<<8 ) + packetBuffer[43];
-    // combine the four bytes (two words) into a long integer
     // this is NTP time (seconds since Jan 1 1900):
-    unsigned long secsSince1900 = highWord << 16 | lowWord;
+    unsigned long secsSince1900 = 0 ;
+    for ( int i = 40 ; i < 44 ; i++ ) {
+        secsSince1900 <<= 8 ;
+        secsSince1900 |= packetBuffer[i] ;
+    }
+
+    p("Seconds since Jan 1 1900 = %lu\n" , secsSince1900);
 
     // now convert NTP time into everyday time:
     // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
@@ -57,13 +77,16 @@ bool readNtpResponse( int *minutes , int * seconds ) {
     // subtract seventy years:
     unsigned long epoch = secsSince1900 - seventyYears;
     // print Unix time:
+    p("Unix time = %lu\n", epoch);
 
-    int hours = (epoch  % 86400L) / 3600 ;
-    *minutes  = (epoch  % 3600) / 60;
-    *seconds  = epoch % 60;
+    unsigned h = (epoch  % 86400L) / 3600 ;
+    unsigned m = (epoch  % 3600) / 60;
+    unsigned s = epoch % 60;
 
-    p("NTP time = %02u:%02u:%02u UTC\n", hours , *minutes, *seconds ); // print the time
+    p("NTP time = %02u:%02u:%02u UTC\n", h , m , s ); // print the time
 
+    *minutes = int(m) ;
+    *seconds = int(s) ;
     return true ;
 }
 
