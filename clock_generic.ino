@@ -10,6 +10,7 @@
 #include "console.h"
 #include "clock_generic.h"
 #include "ntp.h"
+#include "Udp.h"
 
 //_____________________________________________________________________
 //                                                           LOCAL VARS
@@ -199,6 +200,7 @@ void checkNtp() {
         retries = 3 ;
 
     case ntp_request :
+        if ( ! udpActive() ) break ;
 	p("NTP Request\n");
         sendNtpRequest() ;
 	ntpResponseTimeout = getFuture( 10 ) ;  	// timeout if we don't get a response in 10 seconds
@@ -239,6 +241,8 @@ void clockSetup() {
 void service() {
   static int subTimer = 0;       ///< State counter per second
   consoleService() ;
+  udpService( ) ;
+
   checkNtp() ;
 
   switch (state) {

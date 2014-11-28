@@ -51,3 +51,11 @@ int readUdp( char * buf, int size )
    if ( bytes == -1 ) return 0;
    return bytes ;
 }
+
+void reportMac()
+{
+}
+
+void udpService( ) { }
+
+bool udpActive () { return true ; }
