@@ -19,12 +19,14 @@
  modified 9 Apr 2012
  by Tom Igoe
 
- This code is in the public domain.
+  Modified by Phil Hord , September 9, 2013
+  This code is in the public domain.
 
  */
 
 #include "Udp.h"
 #include "console.h"
+#include <ctype.h>
 
 unsigned char timeServer[] = {132, 163, 4, 101}; // time-a.timefreq.bldrdoc.gov NTP server
 // IPAddress timeServer(132, 163, 4, 102); // time-b.timefreq.bldrdoc.gov NTP server
@@ -57,6 +59,9 @@ bool readNtpResponse( int *minutes , int * seconds ) {
         return  false ;
     }
 
+     //PRINT MAC ADDRESS assigned in "Udp code"
+    reportMac( ) ;
+
     p("Reference clock: %.*s\n", 4, packetBuffer+12 );
 
     //the timestamp starts at byte 40 of the received packet and is four bytes,
@@ -69,6 +74,7 @@ bool readNtpResponse( int *minutes , int * seconds ) {
         secsSince1900 |= packetBuffer[i] ;
     }
 
+    p("Composite:   %08lX\n\n", secsSince1900);
     p("Seconds since Jan 1 1900 = %lu\n" , secsSince1900);
 
     // now convert NTP time into everyday time:

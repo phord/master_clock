@@ -1,7 +1,12 @@
 // clock_generic.h
 //
 // Helpers for the Time Protocol
-//
+//  
+//    Master Clock - Drives an IBM Impulse Secondary clock movement
+//    using the International Business Machine Time Protocols,
+//    Service Instructions No. 230, April 1, 1938,Form 231-8884-0
+//    By Phil Hord,  This code is in the public domain Sept 9, 2013 
+//    
 // This header file defines the external interfaces to the Time
 // Protocol code.  The implementations of these functions are
 // different on the Arduiono and the PC.  That is, there is one

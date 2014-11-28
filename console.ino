@@ -2,6 +2,11 @@
    console.cpp
 
    Implements the console user interface to the master clock.
+   
+    Master Clock - Drives an IBM Impulse Secondary clock movement
+    using the International Business Machine Time Protocols,
+    Service Instructions No. 230, April 1, 1938,Form 231-8884-0
+    By Phil Hord,  This code is in the public domain Sept 9, 2013
 */
 
 //_____________________________________________________________________

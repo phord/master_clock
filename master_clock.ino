@@ -1,7 +1,9 @@
 /*
-   MasterClock - Drives a slave clock using the International Business Machine Time Protocols,
-  Service Instructions No. 222, April 1, 1938,Form 231-8920 
-*/
+    Master Clock - Drives an IBM Impulse Secondary clock movement
+    using the International Business Machine Time Protocols,
+    Service Instructions No. 230, April 1, 1938,Form 231-8884-0
+    By Phil Hord,  This code is in the public domain Sept 9, 2013
+ */
 
 #include "TimerOne.h"
 #include "clock_generic.h"
@@ -20,7 +22,7 @@ void sendSignal( int a, int b)
 
 void sendString( const char * str )
 {
-   Serial.print( str ) ;
+  Serial.print( str ) ;
 }
 
 char readKey()
@@ -45,8 +47,8 @@ void slowDown() {
 void setup() {
   Serial.begin(9600);
   // initialize the digital pin as an output.
-  pinMode(ledA, OUTPUT);
-  pinMode(ledB, OUTPUT);
+  pinMode(pulseA, OUTPUT);
+  pinMode(pulseB, OUTPUT);
   Timer1.initialize(100000);         // initialize timer1 to 100ms period
   Timer1.attachInterrupt(ticker);    // attach timer overflow interrupt
   clockSetup() ;
