@@ -173,6 +173,7 @@ int checkB() {
 
 typedef enum Ntp_State {
     ntp_idle ,   	///< NTP is waiting to be triggered
+    ntp_cron ,          ///< Auto-trigger NTP request
     ntp_request , 	///< Sending NTP request
     ntp_response ,      ///< Waiting for NTP response
     ntp_completed ,     ///< NTP completed; waiting for reset
@@ -187,17 +188,25 @@ void triggerNtp() {
 
 void checkNtp() {
     static int ntpResponseTimeout = 0 ;
+    static int ntpRequestGuardTime = 0 ;
     static int retries ;
 
 //	p("\r%d:  %d  %d  %d    ", ntpState , realTick, ntpResponseTimeout , retries ) ;
     switch ( ntpState ) {
     case ntp_idle :
+        if ( m == 58 ) ntpState = ntp_cron ;
+        break ;
+
+    case ntp_cron:
+	ntpRequestGuardTime = getFuture( 15 * 60 ) ;    // Prevent multiple automatic requests within 15 minutes
         retries = 30 ;
-        if ( m == 58 ) ntpState = ntp_request ;
+        ntpState = ntp_request ;
         break ;
 
     case ntp_oneshot:
-        retries = 3 ;
+        retries = 4 ;
+        ntpState = ntp_request ;
+        break ;
 
     case ntp_request :
         if ( ! udpActive() ) break ;
@@ -226,7 +235,9 @@ void checkNtp() {
         break ;
 
     case ntp_completed :
-	if ( m == 2 ) ntpState = ntp_idle ;
+        if ( expired(ntpRequestGuardTime) ) {
+	  ntpState = ntp_idle ;
+        }
         break ;
     }
 }
