@@ -5,10 +5,14 @@
     By Phil Hord,  This code is in the public domain Sept 9, 2013
  */
 
-#include "TimerOne.h"
-#include "clock_generic.h"
-//#include "clock_generic.c"
+/* Library imports */
+#include <TimerOne.h>
+#include <SPI.h>
+#include <EthernetDHCP.h>
+#include <EthernetUdp.h>
 
+/* Shared c++ code */
+#include "clock_generic.h"
 
 // A and B signal pins
 int pulseA = 9;
