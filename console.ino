@@ -2,7 +2,7 @@
    console.cpp
 
    Implements the console user interface to the master clock.
-   
+
     Master Clock - Drives an IBM Impulse Secondary clock movement
     using the International Business Machine Time Protocols,
     Service Instructions No. 230, April 1, 1938,Form 231-8884-0
@@ -29,7 +29,19 @@ void p(const char *fmt, ... ){
 
 // Print the current time and A/B signal levels on the console
 void showTime() {
-  p("\n%c%c %02u:%02u   " , (getA()?'A':' ') , (getB()?'B':' '), getMinutes(), getSeconds() );
+  unsigned int s = getSeconds();
+
+  //-- Newline + whole time every minute
+  if ( s == 0 )
+    p("\n%02u:%02u ", getMinutes(), s);
+  else if ( (s % 10 ) == 0)
+    p("%02u", s );
+  else
+    p("-");
+
+  //-- Show the A/B pulse status
+  if (getA()) p("A");
+  if (getB()) p("B");
 }
 
 // Report the A or B signal has dropped
