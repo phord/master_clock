@@ -40,7 +40,7 @@ void ntpSetup() {
 	udpSetup( timeServer , 123 ) ;
 }
 
-bool readNtpResponse( int *minutes , int * seconds ) {
+bool readNtpResponse( unsigned long &secsSince1900 ) {
   int readBytes = readUdp( (char *)packetBuffer, sizeof(packetBuffer) ) ;
   if ( ! readBytes ) return false ;
 
@@ -65,34 +65,16 @@ bool readNtpResponse( int *minutes , int * seconds ) {
     p("Reference clock: %.*s\n", 4, packetBuffer+12 );
 
     //the timestamp starts at byte 40 of the received packet and is four bytes,
-    // or two words, long. First, esxtract the two words:
+    // or two words, long. First, extract the two words:
 
     // this is NTP time (seconds since Jan 1 1900):
-    unsigned long secsSince1900 = 0 ;
+    secsSince1900 = 0 ;
     for ( int i = 40 ; i < 44 ; i++ ) {
         secsSince1900 <<= 8 ;
         secsSince1900 |= packetBuffer[i] ;
     }
 
-    p("Composite:   %08lX\n\n", secsSince1900);
     p("Seconds since Jan 1 1900 = %lu\n" , secsSince1900);
-
-    // now convert NTP time into everyday time:
-    // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
-    const unsigned long seventyYears = 2208988800UL;
-    // subtract seventy years:
-    unsigned long epoch = secsSince1900 - seventyYears;
-    // print Unix time:
-    p("Unix time = %lu\n", epoch);
-
-    unsigned h = (epoch  % 86400L) / 3600 ;
-    unsigned m = (epoch  % 3600) / 60;
-    unsigned s = epoch % 60;
-
-    p("NTP time = %02u:%02u:%02u UTC\n", h , m , s ); // print the time
-
-    *minutes = int(m) ;
-    *seconds = int(s) ;
     return true ;
 }
 

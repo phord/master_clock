@@ -106,6 +106,41 @@ void incSeconds( ) { if (++s > 59) { s = 0 ; incMinutes() ; } }
 void decMinutes( ) { if (--m < 0) m = 59 ; }
 void decSeconds( ) { if (--s < 0) { s = 59 ; decMinutes() ; } }
 
+void setTimeFromNtp( unsigned long now ) {
+  static unsigned long firstNtp = 0 ;    ///< First sync time
+  static long totalDrift = 0;            ///< Total seconds lost or gained
+
+  // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
+  const unsigned long seventyYears = 2208988800UL;
+  // subtract seventy years to show epoch time
+  unsigned long epoch = now - seventyYears;
+
+  // print Unix time:
+  p("Unix time = %lu\n", epoch);
+
+  unsigned hh = (now % 86400L) / 3600 ;
+  unsigned mm = (now  % 3600) / 60;
+  unsigned ss = now % 60;
+
+  p("NTP time = %02u:%02u:%02u UTC\n", hh , mm , ss ); // print the time
+
+  long delta = (now % 3600L ) - (m*60+s) ;
+  p("\nNTP Server: adjusting time by %d seconds.\n" ,  delta ) ;
+
+  //-- Accumulate error history
+  if (firstNtp) {
+    totalDrift += delta ;
+
+    //-- Report error history
+    p("Seconds since prev NTP: %ld   Total delta:  %ld\n" , now - firstNtp, totalDrift ) ;
+  }
+
+  setSeconds(ss) ;
+  setMinutes(mm) ;
+
+  //-- First known time sync
+  if (!firstNtp) firstNtp = now ;
+}
 //_____________________________________________________________________
 // Signal accessors
 // Let callers force A and B pulses
@@ -225,12 +260,10 @@ void checkNtp() {
         }
 	else
 	{
-            int mm, ss ;
-	    bool success = readNtpResponse( &mm , &ss ) ;
+           unsigned long ntpTime ;
+	    bool success = readNtpResponse( ntpTime ) ;
 	    if ( success ) {
-	        p("\nNTP Server: adjusting time by %d seconds.\n" ,  (mm*60 + ss ) - (m*60+s) ) ;
-	        setMinutes(mm) ;
-	        setSeconds(ss) ;
+                setTimeFromNtp(ntpTime);
 	        ntpState = ntp_completed ;
 	    }
 	}
