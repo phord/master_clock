@@ -247,7 +247,6 @@ void checkNtp() {
 
     case ntp_request :
         if ( ! udpActive() ) break ;
-	p("NTP Request\n");
         sendNtpRequest() ;
 	ntpResponseTimeout = getFuture( 10 ) ;  	// timeout if we don't get a response in 10 seconds
 	ntpState = ntp_response ;

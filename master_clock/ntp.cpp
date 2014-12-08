@@ -96,6 +96,7 @@ void sendNtpRequest()
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
 
+  p("\nNTP Request\n");
   // all NTP fields have been given values, now
   // you can send a packet requesting a timestamp:
   sendUdp((char *)packetBuffer , NTP_PACKET_SIZE ) ;

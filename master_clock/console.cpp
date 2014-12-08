@@ -46,7 +46,7 @@ void showTime() {
 
 // Report the A or B signal has dropped
 void showSignalDrop() {
-    p("%s", (getA()||getB())?"off ":"");
+    p("%s", (getA()||getB())?"*":"");
 }
 
 static bool timeEntryMode = false ;
