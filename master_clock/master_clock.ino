@@ -14,6 +14,9 @@
 /* Shared c++ code */
 #include "clock_generic.h"
 
+/* Telnet server machine */
+#include "TelnetServer.h"
+
 // A and B signal pins
 int pulseA = 9;
 int pulseB = 8;
@@ -27,10 +30,14 @@ void sendSignal( int a, int b)
 void sendString( const char * str )
 {
   Serial.print( str ) ;
+  TelnetWrite( str ) ;
 }
 
 char readKey()
 {
+  int key = TelnetRead() ;
+  if ( key != -1 ) return (char) key ;
+
   if (Serial.available() == 0)
     return -1 ;
   return (char) Serial.read();
@@ -56,9 +63,11 @@ void setup() {
   Timer1.initialize(100000);         // initialize timer1 to 100ms period
   Timer1.attachInterrupt(ticker);    // attach timer overflow interrupt
   clockSetup() ;
+  setupTelnetServer();
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
   service();
+  serviceTelnetServer();
 }
