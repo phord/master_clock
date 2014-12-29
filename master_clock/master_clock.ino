@@ -17,6 +17,9 @@
 /* Telnet server machine */
 #include "TelnetServer.h"
 
+/* NTP server machine */
+#include "NtpServer.h"
+
 // A and B signal pins
 int pulseA = 9;
 int pulseB = 8;
@@ -62,7 +65,7 @@ void setup() {
   pinMode(pulseB, OUTPUT);
   Timer1.initialize(100000);         // initialize timer1 to 100ms period
   Timer1.attachInterrupt(ticker);    // attach timer overflow interrupt
-  clockSetup() ;
+  NtpSetup() ;
   setupTelnetServer();
 }
 

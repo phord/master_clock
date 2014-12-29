@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "kbhit.h"
 #include "clock_generic.h"
+#include "NtpServer.h"
 
 extern int a , b ;
 
@@ -87,7 +88,7 @@ int main ( int argc , char ** argv )
 {
 	init_keyboard();
 	timerInit() ;
-	clockSetup();
+	NtpSetup();
 
 	while ( !quit )
 	{

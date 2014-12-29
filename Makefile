@@ -1,9 +1,9 @@
 
 .INTERMEDIATE:  clock_generic.cpp console.cpp ntp.cpp
 
-all: avr pc
+all: avr clock
 
-pc: pc/pc.c pc/kbhit.c pc/udp.cpp master_clock/clock_generic.cpp master_clock/Timer.cpp master_clock/console.cpp master_clock/ntp.cpp
+clock: pc/pc.c pc/kbhit.c pc/udp.cpp master_clock/clock_generic.cpp master_clock/Timer.cpp master_clock/console.cpp master_clock/ntp.cpp master_clock/NtpServer.cpp
 	g++ -I master_clock -I pc $^ -o clock
 
 avr upload monitor clean::
