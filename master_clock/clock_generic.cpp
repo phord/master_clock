@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include "console.h"
 #include "clock_generic.h"
+#include "Timer.h"
 #include "ntp.h"
 #include "Udp.h"
 
@@ -21,8 +22,6 @@ static int m, s ;              ///< Current minutes and seconds
 int a = LOW , b = LOW ;        ///< Desired A and B signal levels
 int aForce = 0 ;               ///< Force A pulse by operator control
 int bForce = 0 ;               ///< Force B pulse by operator control
-static int realTick = 0;       ///< The number of ticks since we started
-
 
 typedef enum State {
 	reset ,                // Reset ticker to 0 to sync with exact second
@@ -43,46 +42,6 @@ enum {
 	fallTime = 4 ,     // 400ms fall time
 } ;
 
-
-//_____________________________________________________________________
-// Increment the tick counter.  This is called once every 100ms by the
-// hardware interrupt or main executive function.
-void ticker() {
-  ++realTick;
-}
-
-//_____________________________________________________________________
-// Tick accessor.  Because the 'tick' variable is modified during a
-// hardware interrupt, it is not safe to read or write this variable
-// outside of the interrupt routine unless we disable interrupts
-// first.  These functions provide safe access to the tick variable.
-
-//_____________________________________
-// Read the current tick variable.
-int getTick() {
-  noInterrupts() ;
-  int x = realTick ;
-  interrupts();
-  return x;
-}
-
-//_____________________________________
-// Read number of elapsed ticks relative to timer variable
-int elapsed( int timer ) {
-  return getTick() - timer ;
-}
-
-//_____________________________________
-// Return a timer tick from some point in the future
-int getFuture( int nSeconds ) {
-  return getTick() + nSeconds * 10 ;
-}
-
-//_____________________________________
-// Test if a timer has expired (is in the past)
-bool expired( int timer ) {
-  return elapsed(timer) >= 0;
-}
 
 //_____________________________________
 // Reset the tick counter to 0
