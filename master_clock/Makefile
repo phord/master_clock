@@ -3,7 +3,7 @@
 # On Debian Linux, sudo apt-get install arduino-mk python-serial
 
 BOARD_TAG     = mega2560
-MONITOR_PORT  = /dev/ttyACM*
+MONITOR_PORT  = $(lastword $(wildcard /dev/ttyACM*))
 ARDUINO_LIBS = ArduinoEthernet SPI TimerOne Ethernet
 
 # If youre ARDMK_DIR is somewhere you can override this variable on the make commandline 
