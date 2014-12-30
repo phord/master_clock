@@ -2,9 +2,13 @@
 .INTERMEDIATE:  clock_generic.cpp console.cpp ntp.cpp
 
 all: avr clock
+PC_SOURCES=pc.c kbhit.c udp.cpp
+COMMON_SOURCES=clock_generic.cpp Timer.cpp console.cpp ntp.cpp NtpServer.cpp ConfigData.cpp Config.cpp
 
-clock: pc/pc.c pc/kbhit.c pc/udp.cpp master_clock/clock_generic.cpp master_clock/Timer.cpp master_clock/console.cpp master_clock/ntp.cpp master_clock/NtpServer.cpp
-	g++ -I master_clock -I pc $^ -o clock
+SOURCES=$(addprefix pc/,$(PC_SOURCES)) $(addprefix master_clock/,$(COMMON_SOURCES))
+
+clock: $(SOURCES) Makefile
+	g++ -I master_clock -I pc $(SOURCES) -o clock
 
 avr upload monitor clean::
 	make -sC master_clock $(MAKECMDGOALS)

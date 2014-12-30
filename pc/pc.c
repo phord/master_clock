@@ -7,6 +7,7 @@
 #include "kbhit.h"
 #include "clock_generic.h"
 #include "NtpServer.h"
+#include "ConfigData.h"
 
 extern int a , b ;
 
@@ -89,6 +90,11 @@ int main ( int argc , char ** argv )
 	init_keyboard();
 	timerInit() ;
 	NtpSetup();
+
+	ConfigError err = mac.Parse("00:11:22:33:44:55");
+	if ( err ) printf("Error: %u\n", err ) ;
+
+	ShowConfig();
 
 	while ( !quit )
 	{

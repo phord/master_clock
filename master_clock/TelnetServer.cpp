@@ -6,6 +6,7 @@
 #include <Ethernet.h>
 
 #include "clock_generic.h"
+#include "ConfigData.h"
 
 EthernetServer telnet_server(23);  // create a server at port 80
 EthernetClient telnet_client ;
@@ -35,5 +36,9 @@ void serviceTelnetServer()
         telnet_client.stop() ;
 
     if ( ! telnet_client )
+    {
         telnet_client = telnet_server.available() ;
+
+        if ( telnet_client ) ShowConfig() ;
+    }
 }

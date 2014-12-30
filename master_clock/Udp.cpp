@@ -18,12 +18,7 @@
 #include <EthernetDHCP.h>
 #include <EthernetUdp.h>
 #include "console.h"
-//#include "myUdp.h"
-
-// Enter a MAC address for your controller below.
-// Newer Ethernet shields have a MAC address printed on a sticker on the shield
-byte mac[] = {
-  0x00, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+#include "ConfigData.h"
 
 IPAddress *timeServerAddress = NULL ;
 unsigned int localPort = 8888;      // local port to listen for UDP packets
@@ -35,7 +30,9 @@ static bool active = false ;
 
 void reportMac()
 {
-  p("Programmed MAC address=%02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] ) ;
+  char strmac[20];
+  mac.ToString( strmac, sizeof(strmac) ) ;
+  p("Programmed MAC address=%s\n", strmac ) ;
 }
 
 // Just a utility function to nicely format an IP address.
@@ -49,7 +46,8 @@ const char* ip_to_str(const uint8_t* ipAddr)
 void udpSetup(unsigned char* addr , unsigned int port )
 {
   // start Ethernet and UDP
-  EthernetDHCP.begin(mac, 1);
+  mac.Parse("00:DE:AD:BE:EF:00");
+  EthernetDHCP.begin(const_cast<uint8_t *>(mac.value()), 1);
   timeServerAddress = new IPAddress( addr[0], addr[1], addr[2], addr[3]);
   serverPort = port ;
 }

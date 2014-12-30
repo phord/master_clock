@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdint.h>
+#include <string.h>
+
+typedef uint8_t byte ;
 
 #ifndef LOW
 	// On the Arduino these are already defined.
