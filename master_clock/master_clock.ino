@@ -22,6 +22,13 @@
 // A and B signal pins
 int pulseA = 9;
 int pulseB = 8;
+const int RUN = 2;
+
+
+int run_switch()
+{
+  return !digitalRead(RUN);
+}
 
 void sendSignal( int a, int b)
 {
@@ -60,6 +67,7 @@ void setup() {
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
   pinMode(pulseB, OUTPUT);
+  pinMode(RUN, INPUT_PULLUP); // Use pullup mode to default HIGH
   NtpSetup() ;
   setupTelnetServer();
 }
