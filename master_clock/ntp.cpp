@@ -45,14 +45,15 @@ bool readNtpResponse( unsigned long &secsSince1900 ) {
   if ( ! readBytes ) return false ;
 
     p("NTP: Received %u byte packet\n", readBytes);
-    p("------------------------------------------------------------------------------\n");
-    for (int i = 0 ; i < readBytes ; i++ ) {
-        p("%02X " , packetBuffer[i]) ;
-        int n=i+1;
-        if ( n == readBytes || (n%32)==0 ) p("\n");
-        else if ((n%16)==0 ) p("- ");
-    }
-    p("------------------------------------------------------------------------------\n");
+//    p("------------------------------------------------------------------------------\n");
+//    for (int i = 0 ; i < readBytes ; i++ ) {
+//        p("%02X " , packetBuffer[i]) ;
+//        int n=i+1;
+//        if ( n == readBytes || (n%32)==0 ) p("\n");
+//        else if ((n%16)==0 ) p("- ");
+//    }
+//    p("===\n");
+//    p("------------------------------------------------------------------------------\n");
 
     if ( readBytes < 48 ) {
         p("Packet too short.\n");
@@ -60,7 +61,7 @@ bool readNtpResponse( unsigned long &secsSince1900 ) {
     }
 
      //PRINT MAC ADDRESS assigned in "Udp code"
-    reportMac( ) ;
+    //reportMac( ) ;
 
     p("Reference clock: %.*s\n", 4, packetBuffer+12 );
 

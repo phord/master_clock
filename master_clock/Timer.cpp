@@ -22,19 +22,10 @@ void ticker() {
   ++realTick;
 }
 
-//_____________________________________________________________________
-// Tick accessor.  Because the 'tick' variable is modified during a
-// hardware interrupt, it is not safe to read or write this variable
-// outside of the interrupt routine unless we disable interrupts
-// first.  These functions provide safe access to the tick variable.
-
 //_____________________________________
-// Read the current tick variable.
+// Read the current 10ms tick variable.
 int getTick() {
-  noInterrupts() ;
-  int x = realTick ;
-  interrupts();
-  return x;
+  return millis()/100;
 }
 
 //_____________________________________

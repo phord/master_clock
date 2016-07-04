@@ -49,6 +49,8 @@ char readKey();
 
 void sendSignal( int a, int b) ;
 
+int run_switch() ;
+
 //________________________________________________________________
 // Run the clock loop
 //

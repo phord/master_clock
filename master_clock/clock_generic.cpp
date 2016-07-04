@@ -95,8 +95,11 @@ void markTime()
 // The 'A' signal is raised once per minute at zero-seconds, and on
 // every odd second between 10 and 50 during the 59th minute.
 //
-// Note: If 'aForce' is non-zero, return HIGH.
+// Note: If 'aForce' is non-zero or pin D2 is high, return HIGH.
 int checkA() {
+     // Manual run based on switch input
+    if ( run_switch() ) return HIGH ;
+  
     // Manual run based on serial input
     if ( aForce ) { aForce-- ; return HIGH ; }
 
@@ -122,6 +125,9 @@ int checkA() {
 //
 // Note: If 'bForce' is non-zero, return HIGH.
 int checkB() {
+     // Manual run based on switch input
+    if ( run_switch() ) return HIGH ;
+  
     // Manual run based on serial input
     if ( bForce ) { bForce-- ; return HIGH ; }
 

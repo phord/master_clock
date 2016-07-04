@@ -20,6 +20,7 @@
 // Print formatted text to the console.
 void p(const char *fmt, ... ){
         char tmp[128]; // resulting string limited to 128 chars
+        memset(tmp,0,sizeof(tmp));
         va_list args;
         va_start (args, fmt );
         vsnprintf(tmp, 128, fmt, args);
@@ -33,20 +34,21 @@ void showTime() {
 
   //-- Newline + whole time every minute
   if ( s == 0 )
-    p("\n%02u:%02u ", getMinutes(), s);
-  else if ( (s % 10 ) == 0)
-    p("%02u", s );
-  else
-    p("-");
+    p("%02u:%02u %c%c\n", getMinutes(), s, getA()?'A':' ', getB()?'B':' ');
+//  else if ( (s % 10 ) == 0)
+//    p("%02u", s );
+//  else
+//    p("-");
 
-  //-- Show the A/B pulse status
-  if (getA()) p("A");
-  if (getB()) p("B");
+//  //-- Show the A/B pulse status
+//  if (getA()) p("A");
+//  if (getB()) p("B");
+//  if ( s == 0 || getA() || getB()) p("\n");
 }
 
 // Report the A or B signal has dropped
 void showSignalDrop() {
-    p("%s", (getA()||getB())?"*":"");
+//    if (getA()||getB()) p("*\n");
 }
 
 static bool timeEntryMode = false ;

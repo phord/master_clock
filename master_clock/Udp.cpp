@@ -15,24 +15,27 @@
 #include <Arduino.h>
 #include <IPAddress.h>
 #include <SPI.h>
-#include <EthernetDHCP.h>
-#include <EthernetUdp.h>
+//#include <EthernetDHCP.h>
+//#include <EthernetUdp.h>
+#include <WiFiServer.h>
+#include <WiFiUdp.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 #include "console.h"
 #include "ConfigData.h"
 
-IPAddress *timeServerAddress = NULL ;
+IPAddress timeServerAddress ;
 unsigned int localPort = 8888;      // local port to listen for UDP packets
-unsigned int serverPort = 0 ;
 
 // A UDP instance to let us send and receive packets over UDP
-EthernetUDP Udp;
+WiFiUDP Udp;
+
 static bool active = false ;
+const char* ntpServerName = "time.nist.gov";
 
 void reportMac()
 {
-  char strmac[20];
-  mac.ToString( strmac, sizeof(strmac) ) ;
-  p("Programmed MAC address=%s\n", strmac ) ;
 }
 
 // Just a utility function to nicely format an IP address.
@@ -45,61 +48,26 @@ const char* ip_to_str(const uint8_t* ipAddr)
 
 void udpSetup(unsigned char* addr , unsigned int port )
 {
-  // start Ethernet and UDP
-  mac.Parse("00:DE:AD:BE:EF:00");
-  EthernetDHCP.begin(const_cast<uint8_t *>(mac.value()), 1);
-  timeServerAddress = new IPAddress( addr[0], addr[1], addr[2], addr[3]);
-  serverPort = port ;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+
+  Particle.println("Starting UDP");
+  Udp.begin(port);
+  Particle.print("Local port: ");
+  Particle.println(Udp.localPort());
+
+  //get a random server from the pool
+  WiFi.hostByName(ntpServerName, timeServerAddress ); 
+  //timeServerAddress = new IPAddress( addr[0], addr[1], addr[2], addr[3]);
 }
 
 void udpService( )
 {
-  static DhcpState prevState = DhcpStateNone;
-  
-  // poll() queries the DHCP library for its current state (all possible values
-  // are shown in the switch statement below). This way, you can find out if a
-  // lease has been obtained or is in the process of being renewed, without
-  // blocking your sketch. Therefore, you could display an error message or
-  // something if a lease cannot be obtained within reasonable time.
-  // Also, poll() will actually run the DHCP module, just like maintain(), so
-  // you should call either of these two methods at least once within your
-  // loop() section, or you risk losing your DHCP lease when it expires!
-  DhcpState state = EthernetDHCP.poll();
-
-  if (prevState != state) {
-
-    switch (state) {
-      case DhcpStateDiscovering:
-        p("DHCP Discover\n");
-        break;
-      case DhcpStateRequesting:
-        Serial.print("DHCP Request\n");
-        break;
-      case DhcpStateRenewing:
-        Serial.print("DHCP Renew\n");
-        break;
-      case DhcpStateLeased: {
-        Serial.println("DHCP Obtained\n");
-
-        // Since we're here, it means that we now have a DHCP lease, so we
-        // print out some information.
-        const byte* ipAddr = EthernetDHCP.ipAddress();
-        const byte* gatewayAddr = EthernetDHCP.gatewayIpAddress();
-        const byte* dnsAddr = EthernetDHCP.dnsIpAddress();
-
-        p(" IP address: %s\n", ip_to_str(ipAddr));
-        p("    Gateway: %s\n", ip_to_str(gatewayAddr));
-        p("        DNS: %s\n", ip_to_str(dnsAddr));
-
-        if ( ! active ) {
-          p("Starting NTP handler on port %u\n", localPort ) ;
-          Udp.begin(localPort);
-          active = true;
-        }
-        break;
-      }
-    }
-    prevState = state;
+  if ( ! active ) {
+    p("Starting NTP handler on port %u\n", localPort ) ;
+    Udp.begin(localPort);
+    active = true;
   }
 }
 
@@ -109,16 +77,23 @@ int sendUdp( char * data, int size )
 {
   if ( ! active ) return 0 ;
   
-  Udp.beginPacket(*timeServerAddress, serverPort);
-  byte count = Udp.write((const unsigned char *)data,size);
+  Udp.beginPacket(timeServerAddress, 123); //NTP requests are to port 123
+  byte count = Udp.write(data, size);
   Udp.endPacket();
+
   return (int) count ;
 }
 
 int readUdp( char * buf, int size )
 {
   if ( ! active ) return 0 ;
-  int count = Udp.parsePacket() ;
-  if ( count ) Udp.read( buf, size ) ;
+
+  int count = Udp.parsePacket();
+  if (count) {
+    Particle.print("packet received, length=");
+    Particle.println(count);
+    Udp.read(buf, size);
+  }
   return count ;
 }
+

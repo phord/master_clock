@@ -3,13 +3,18 @@
 
 /* Library imports */
 #include <SPI.h>
-#include <Ethernet.h>
+//#include <Ethernet.h>
+#include <WiFiServer.h>
+#include <WiFiUdp.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 
 #include "clock_generic.h"
 #include "ConfigData.h"
 
-EthernetServer telnet_server(23);  // create a server at port 80
-EthernetClient telnet_client ;
+WiFiServer telnet_server(23);  // create a server at port 23
+WiFiClient telnet_client ;
 
 void setupTelnetServer()
 {
