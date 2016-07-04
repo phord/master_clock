@@ -20,8 +20,8 @@
 #include "NtpServer.h"
 
 // A and B signal pins
-int pulseA = 9;
-int pulseB = 8;
+const int pulseA = 9;
+const int pulseB = 8;
 const int LED = 13;
 const int RUN = 2;
 
