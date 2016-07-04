@@ -6,7 +6,6 @@
  */
 
 /* Library imports */
-#include <TimerOne.h>
 #include <SPI.h>
 #include <EthernetDHCP.h>
 #include <EthernetUdp.h>
@@ -49,12 +48,10 @@ char readKey()
 unsigned long us_per_tick = 100000 ;
 void speedUp() {
   us_per_tick /= 2 ;
-  Timer1.setPeriod(us_per_tick);    // Adjust tick speed
 }
 
 void slowDown() {
   us_per_tick *= 2 ;
-  Timer1.setPeriod(us_per_tick);    // Adjust tick speed
 }
 
 // the setup routine runs once when you press reset:
@@ -63,8 +60,6 @@ void setup() {
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
   pinMode(pulseB, OUTPUT);
-  Timer1.initialize(100000);         // initialize timer1 to 100ms period
-  Timer1.attachInterrupt(ticker);    // attach timer overflow interrupt
   NtpSetup() ;
   setupTelnetServer();
 }
