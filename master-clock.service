@@ -1,0 +1,12 @@
+# Copy this file into /lib/systemd/system/master-clock.service
+
+[Unit]
+Description=Master Clock Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3 /home/pi/clock.py
+
+[Install]
+WantedBy=multi-user.target
