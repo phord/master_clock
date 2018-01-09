@@ -81,11 +81,12 @@ def main():
     try:
         # Read last known displayed time from log file
         display_time = Time.load(displayTimeCacheFile)
-        print("Display time: {}".format(display_time))
+        print("Display time: {}   ".format(display_time), end='')
     except:
         display_time = Time()
-        print("")
         pass
+
+    print("Actual time: {}".format(Time()))
 
     while True:
         # Check if user-time file exists.
