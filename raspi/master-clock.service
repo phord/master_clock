@@ -1,0 +1,10 @@
+[Unit]
+Description=Master Clock Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/home/pi/clock-service
+
+[Install]
+WantedBy=multi-user.target
