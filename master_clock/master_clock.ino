@@ -5,7 +5,7 @@
     By Phil Hord,  This code is in the public domain Sept 9, 2013
  */
 
-#define OAK
+#define NODEMCU
 
 /* Library imports */
 #include <SPI.h>
@@ -20,6 +20,9 @@
 /* Shared c++ code */
 #include "clock_generic.h"
 
+// Generic Network setup
+#include "Network.h"
+
 /* Telnet server machine */
 #include "TelnetServer.h"
 
@@ -27,10 +30,10 @@
 #include "NtpServer.h"
 
 // A and B signal pins
-const int pulseA = 9;
-const int pulseB = 8;
-const int LED = 1;
-const int RUN = 2;
+const int pulseA = 14;
+const int pulseB = 12;
+const int LED = D0;
+const int RUN = D3;
 
 
 int run_switch()
@@ -63,7 +66,7 @@ char readKey()
   #ifdef OAK
   return -1;    // TODO: Implement Particle.read()
   #else
-  
+
   if (Serial.available() == 0)
     return -1 ;
   return (char) Serial.read();
@@ -85,8 +88,12 @@ void setup() {
   Particle.begin();
   Particle.println("Begin master_clock");
   #else
-  Serial.begin(9600);
+  Serial.begin(115200);
   #endif
+  #ifdef NODEMCU
+  setupNetwork();
+  #endif
+
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
   pinMode(pulseB, OUTPUT);

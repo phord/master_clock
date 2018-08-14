@@ -34,21 +34,20 @@ void showTime() {
 
   //-- Newline + whole time every minute
   if ( s == 0 )
-    p("%02u:%02u %c%c\n", getMinutes(), s, getA()?'A':' ', getB()?'B':' ');
-//  else if ( (s % 10 ) == 0)
-//    p("%02u", s );
-//  else
-//    p("-");
+    p("\n%02u:%02u ", getMinutes(), s);
+  else if ( (s % 10 ) == 0)
+    p("%02u", s );
+  else
+    p("-");
 
-//  //-- Show the A/B pulse status
-//  if (getA()) p("A");
-//  if (getB()) p("B");
-//  if ( s == 0 || getA() || getB()) p("\n");
+  //-- Show the A/B pulse status
+  if (getA()) p("A");
+  if (getB()) p("B");
 }
 
 // Report the A or B signal has dropped
 void showSignalDrop() {
-//    if (getA()||getB()) p("*\n");
+  p("%s", (getA()||getB())?"*":"");
 }
 
 static bool timeEntryMode = false ;

@@ -51,14 +51,12 @@ void udpSetup(unsigned char* addr , unsigned int port )
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-
-  Particle.println("Starting UDP");
+  Serial.println("Starting UDP");
   Udp.begin(port);
-  Particle.print("Local port: ");
-  Particle.println(Udp.localPort());
-
+  Serial.print("Local port: ");
+  Serial.println(Udp.localPort());
   //get a random server from the pool
-  WiFi.hostByName(ntpServerName, timeServerAddress ); 
+  WiFi.hostByName(ntpServerName, timeServerAddress );
   //timeServerAddress = new IPAddress( addr[0], addr[1], addr[2], addr[3]);
 }
 
@@ -76,7 +74,7 @@ bool udpActive () { return !!active ; }
 int sendUdp( char * data, int size )
 {
   if ( ! active ) return 0 ;
-  
+
   Udp.beginPacket(timeServerAddress, 123); //NTP requests are to port 123
   byte count = Udp.write(data, size);
   Udp.endPacket();
@@ -90,10 +88,9 @@ int readUdp( char * buf, int size )
 
   int count = Udp.parsePacket();
   if (count) {
-    Particle.print("packet received, length=");
-    Particle.println(count);
+    Serial.print("packet received, length=");
+    Serial.println(count);
     Udp.read(buf, size);
   }
   return count ;
 }
-
