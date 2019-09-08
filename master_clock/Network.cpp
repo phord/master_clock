@@ -28,6 +28,8 @@ bool setupNetwork()
   wifiMulti.addAP("foxland02", "ffffffffee");
 
   int i = 0;
+  // FIXME: Make this a state machine so we don't hang while starting.
+  // Will need to move other network service startups into here
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
     delay(1000);
     Serial.print(++i); Serial.print(' ');
