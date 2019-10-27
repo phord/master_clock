@@ -106,6 +106,7 @@ def main():
             os.unlink(displayTimeUserOverride)
             display_time = userTime
             print("\nUser set display time: {}\n".format(display_time))
+            display_time.save(displayTimeCacheFile)
         except:
             pass
 
@@ -113,6 +114,9 @@ def main():
         if t == display_time:
             sleep(0.1)
             continue
+
+
+        synced = Time.ntp_syncronized()
 
         if not signal.checkPower():
             # Power loss; mark time and wait for power to come back on
@@ -142,6 +146,13 @@ def main():
             a = True
             b = True
             display_time += Time(0,1,0)
+
+        elif not synced and (t.M&1) == 0:
+            # Double-pulse every minute to alert user we don't have ntp
+            msg = "No NTP Sync"
+            sleep(min(60-t.S,5))
+            a = False
+            b = False
 
         else:
             # Advance display time by one second
