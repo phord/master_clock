@@ -82,6 +82,9 @@ def main():
         # Read last known displayed time from log file
         display_time = Time.load(displayTimeCacheFile)
         print("Display time: {}".format(display_time))
+
+        # Use the clock display time as our RTC if we're not synched yet
+        Time.set_base_time(display_time)
     except:
         display_time = Time()
         print("")
