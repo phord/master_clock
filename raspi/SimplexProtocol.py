@@ -196,7 +196,7 @@ class Simplex:
     def secondsUntilNextPulse(self, t):
         ''' Count expected seconds before next pulse will be sent.
         '''
-        return min(secondsUntilNextPulseA(t), secondsUntilNextPulseB(t))
+        return min(self.secondsUntilNextPulseA(t), self.secondsUntilNextPulseB(t))
 
     def secondsUntilNextPulseA(self, t):
         '''
