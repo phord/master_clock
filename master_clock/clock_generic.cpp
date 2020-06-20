@@ -138,14 +138,43 @@ int checkB() {
     return LOW ;
 }
 
+// Flicker the LED if something interesting has happened
+static int somethingHappened = 0;
+static bool led = true;
+void showActivity(int count) {
+  if (!somethingHappened)
+    somethingHappened = count*2 + 1;
+}
+
+static void ledService() {
+  static int subTimer = 0;       ///< State counter per 100ms
+  if (!subTimer) subTimer = getTick();
+
+  int ledTime = (somethingHappened == 1) ? 4 : 1;
+  if (elapsed(subTimer) < ledTime ) return ;
+  subTimer += ledTime;
+
+  if (somethingHappened) {
+    if (--somethingHappened)
+      led = !led;
+  }
+
+  digitalWrite(BUILTIN_LED, led ? LOW : HIGH);
+}
+
+void toggleLed() {
+  led = !led;
+}
+
 //_____________________________________
 // the service routine runs over and over again forever:
 void service() {
-  static int subTimer = 0;       ///< State counter per second
+  static int subTimer = 0;       ///< State counter per 100ms
 
   consoleService() ;
   udpService( ) ;
   NtpService() ;
+  ledService();
 
   switch (state) {
   default:
@@ -156,6 +185,7 @@ void service() {
     b = checkB() ;
 
     sendSignal( a , b ) ;        // Send output pulses (if any)
+    if (a||b) toggleLed();
 
     showTime() ;                 // Report time and signals to serial port
 
@@ -170,6 +200,7 @@ void service() {
 
   case fall:
     sendSignal( LOW , LOW ) ;     // End output pulses
+    if (a||b) toggleLed();
     showSignalDrop() ;
 
     state = fallWait;

@@ -1,12 +1,12 @@
 // clock_generic.h
 //
 // Helpers for the Time Protocol
-//  
+//
 //    Master Clock - Drives an IBM Impulse Secondary clock movement
 //    using the International Business Machine Time Protocols,
 //    Service Instructions No. 230, April 1, 1938,Form 231-8884-0
-//    By Phil Hord,  This code is in the public domain Sept 9, 2013 
-//    
+//    By Phil Hord,  This code is in the public domain Sept 9, 2013
+//
 // This header file defines the external interfaces to the Time
 // Protocol code.  The implementations of these functions are
 // different on the Arduiono and the PC.  That is, there is one
@@ -89,3 +89,12 @@ void sendPulseB() ;
 
 bool getA() ;        // Read the last A-signal level
 bool getB() ;        // Read the last B-signal level
+
+// LED service: LED usually tracks clock signal lines, but it flickers at 5Hz
+// to show other activity (network messages, time sync loss, etc.)
+
+// Sync the LED to a specific state (ON/OFF)
+void syncActivity(bool state);
+
+// Sync call to show something happened that needs flickering `count` times
+void showActivity(int count);

@@ -32,7 +32,6 @@
 // A and B signal pins
 const int pulseA = 14;
 const int pulseB = 12;
-const int LED = D0;
 const int RUN = D3;
 
 
@@ -45,7 +44,6 @@ void sendSignal( int a, int b)
 {
   digitalWrite(pulseA, a);   // Send A pulses
   digitalWrite(pulseB, b);   // Send B pulses
-  digitalWrite(LED, a|b);    // BLink LED with any A or B pulse
 }
 
 void sendString( const char * str )
@@ -97,7 +95,7 @@ void setup() {
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
   pinMode(pulseB, OUTPUT);
-  pinMode(LED, OUTPUT);
+  pinMode(BUILTIN_LED, OUTPUT);
   pinMode(RUN, INPUT_PULLUP); // Use pullup mode to default HIGH
   NtpSetup() ;
   setupTelnetServer();
