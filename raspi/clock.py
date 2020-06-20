@@ -15,6 +15,10 @@ from SimplexProtocol import Time, Simplex
 import math
 import os
 
+# If the clock is fast, but less than this many minutes fast, wait to catch up instead
+# advancing all the way around the clock again.
+FAST_WAIT_THRESHOLD = 30
+
 class Signal:
     A = LED(27)
     B = LED(17)
@@ -39,11 +43,15 @@ class Signal:
 
 class Console:
     # Print the current time and A/B signal levels on the console
-    def showTime(self, tm, a, b):
+    def showTime(self, tm, a, b, msg=""):
         s = tm.S
+
+        if msg:
+            print("  {}  ".format(msg), end='')
+
         #-- Newline + whole time every minute
         if s == 0:
-            print("\n%s " % tm, end='', flush=True)
+            print("\n{} ".format(tm), end='', flush=True)
         elif (s % 10 ) == 0:
             print("{0:02d}".format(s), end='', flush=True)
         else:
@@ -81,12 +89,14 @@ def main():
     try:
         # Read last known displayed time from log file
         display_time = Time.load(displayTimeCacheFile)
-        print("Display time: {}   ".format(display_time), end='')
+        print("Display time: {}".format(display_time))
+
+        # Use the clock display time as our RTC if we're not synched yet
+        Time.set_base_time(display_time)
     except:
         display_time = Time()
+        print("")
         pass
-
-    print("Actual time: {}".format(Time()))
 
     while True:
         # Check if user-time file exists.
@@ -96,6 +106,7 @@ def main():
             os.unlink(displayTimeUserOverride)
             display_time = userTime
             print("\nUser set display time: {}\n".format(display_time))
+            display_time.save(displayTimeCacheFile)
         except:
             pass
 
@@ -104,26 +115,54 @@ def main():
             sleep(0.1)
             continue
 
+
+        synced = Time.ntp_syncronized()
+
         if not signal.checkPower():
             # Power loss; mark time and wait for power to come back on
             con.showPowerLoss(display_time, t)
-            sleep(1)
+            sleep(30)
             continue
-
-        # Advance display timer only if we have power; otherwise we can't advance it, so don't pretend
-        display_time += Time(0,0,1)
-        a = protocol.checkA(display_time)
-        b = protocol.checkB(display_time)
 
         if signal.checkRun():
             # RUN switch overrides protocol, when powered; if held pulse both lines every second
+            msg = "RUN switch"
             a = True
             b = True
 
             # If user is running the show, forget any lag time we thought we would catch up
             display_time.reset()
 
-        con.showTime(display_time, a, b)
+        elif (display_time - t) > 0 and (display_time - t) / 60 <= FAST_WAIT_THRESHOLD:
+            # Clock is fast, but it's less than 30 minutes fast.  Let's just wait for time to catch up
+            msg = "Fast: WAIT {}".format(t, display_time)
+            sleep(min(60-t.S,5))
+            a = False
+            b = False
+
+        elif t - display_time > 100:
+            # Clock is way behind.  Skip over the Simplex corrections to run as fast as we can
+            msg = "Slow: CATCH-UP {} {}".format(t, (t - display_time)//60)
+            a = True
+            b = True
+            display_time += Time(0,1,0)
+
+        elif not synced and (t.M&1) == 0:
+            # Double-pulse every minute to alert user we don't have ntp
+            msg = "No NTP Sync"
+            sleep(min(60-t.S,5))
+            a = False
+            b = False
+
+        else:
+            # Advance display time by one second
+            msg = ""
+            display_time += Time(0,0,1)
+            a = protocol.checkA(display_time)
+            b = protocol.checkB(display_time)
+
+
+        con.showTime(display_time, a, b, msg)
 
         if a or b:
             # Record clock time in case of power loss
