@@ -88,21 +88,17 @@ void setup() {
   #else
   Serial.begin(115200);
   #endif
-  #ifdef NODEMCU
-  setupNetwork();
-  #endif
 
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
   pinMode(pulseB, OUTPUT);
   pinMode(BUILTIN_LED, OUTPUT);
   pinMode(RUN, INPUT_PULLUP); // Use pullup mode to default HIGH
-  NtpSetup() ;
-  setupTelnetServer();
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
+  setupNetwork();
   service();
 //  serviceTelnetServer();
 }
