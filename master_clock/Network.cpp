@@ -1,9 +1,4 @@
-//================================================================================
-// TelnetServer
-
-/* Library imports */
 #include <SPI.h>
-//#include <Ethernet.h>
 #include <WiFiServer.h>
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
@@ -15,7 +10,6 @@
 ESP8266WiFiMulti wifiMulti;
 
 #include "clock_generic.h"
-#include "ConfigData.h"
 
 #include <ESP8266mDNS.h>
 

@@ -11,7 +11,6 @@
 #include <WiFiClientSecure.h>
 
 #include "clock_generic.h"
-#include "ConfigData.h"
 
 WiFiServer telnet_server(23);  // create a server at port 23
 WiFiClient telnet_client ;
@@ -44,6 +43,6 @@ void serviceTelnetServer()
     {
         telnet_client = telnet_server.available() ;
 
-        if ( telnet_client ) ShowConfig() ;
+        // if ( telnet_client ) ShowConfig() ;
     }
 }

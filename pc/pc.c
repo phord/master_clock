@@ -7,7 +7,6 @@
 #include "kbhit.h"
 #include "clock_generic.h"
 #include "NtpServer.h"
-#include "ConfigData.h"
 
 extern int a , b ;
 

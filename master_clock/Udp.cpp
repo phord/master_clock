@@ -23,7 +23,6 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include "console.h"
-#include "ConfigData.h"
 
 IPAddress timeServerAddress ;
 unsigned int localPort = 8888;      // local port to listen for UDP packets
