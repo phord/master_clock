@@ -35,6 +35,10 @@ const int pulseB = 12;
 const int RUN = D3;
 
 
+#include <TZ.h>
+//#define MYTZ TZ_America_Detroit // Central time
+#define MYTZ TZ_America_Los_Angeles
+
 int run_switch()
 {
   return !digitalRead(RUN);
@@ -87,6 +91,9 @@ void setup() {
   Particle.println("Begin master_clock");
   #else
   Serial.begin(115200);
+
+  // Start ESP ntp time service
+  configTime(MYTZ, "pool.ntp.org");
   #endif
 
   // initialize the digital pin as an output.

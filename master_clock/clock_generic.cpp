@@ -13,7 +13,6 @@
 #include "clock_generic.h"
 #include "Timer.h"
 #include "NtpServer.h"
-#include "Udp.h"
 
 //_____________________________________________________________________
 //                                                           LOCAL VARS
@@ -172,7 +171,6 @@ void service() {
   static int subTimer = 0;       ///< State counter per 100ms
 
   consoleService() ;
-  udpService( ) ;
   NtpService() ;
   ledService();
 
