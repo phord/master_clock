@@ -5,8 +5,6 @@
     By Phil Hord,  This code is in the public domain Sept 9, 2013
  */
 
-#define NODEMCU
-
 /* Library imports */
 #include <SPI.h>
 //#include <EthernetDHCP.h>
@@ -52,11 +50,7 @@ void sendSignal( int a, int b)
 
 void sendString( const char * str )
 {
-  #ifdef OAK
-  Particle.print(str);
-  #else
   Serial.print( str ) ;
-  #endif
   TelnetWrite( str ) ;
 }
 
@@ -64,10 +58,6 @@ char readKey()
 {
   int key = TelnetRead() ;
   if ( key != -1 ) return (char) key ;
-
-  #ifdef OAK
-  return -1;    // TODO: Implement Particle.read()
-  #else
 
   if (Serial.available() == 0)
     return -1 ;
@@ -86,15 +76,10 @@ void slowDown() {
 
 // the setup routine runs once when you press reset:
 void setup() {
-  #ifdef OAK
-  Particle.begin();
-  Particle.println("Begin master_clock");
-  #else
   Serial.begin(115200);
 
   // Start ESP ntp time service
   configTime(MYTZ, "pool.ntp.org");
-  #endif
 
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
