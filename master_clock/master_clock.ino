@@ -62,7 +62,6 @@ char readKey()
   if (Serial.available() == 0)
     return -1 ;
   return (char) Serial.read();
-  #endif
 }
 
 unsigned long us_per_tick = 100000 ;
