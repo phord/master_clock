@@ -30,11 +30,18 @@ void p(const char *fmt, ... ){
 
 // Print the current time and A/B signal levels on the console
 void showTime() {
-  unsigned int s = getSeconds();
+  auto t = getRealTime();
+  unsigned int s = t % 60;
+  unsigned int m = (t / 60) % 60;
+  unsigned int h = (t / 60 / 60) % 12;
+
+  auto wt = getWallTime();
+  unsigned int wm = (wt / 60) % 60;
+  unsigned int wh = (wt / 60 / 60) % 12;
 
   //-- Newline + whole time every minute
   if ( s == 0 )
-    p("\n%02u:%02u ", getMinutes(), s);
+    p("\n%02u:%02u:%02u %02u:%02u ", h, m, s, wh, wm);
   else if ( (s % 10 ) == 0)
     p("%02u", s );
   else
@@ -90,62 +97,6 @@ bool timeEntry( char ch ) {
   timeEntryMode = false ;
   if ( ibuf == 0 ) return false ;
 
-  // Show the user the time string he entered
-  p ("    time=%s ", buf);
-
-  // interpret the time we have accumulated from the user
-  int m0 = -1 ;
-  int s0 = -1 ;
-  char *pp = buf ;
-
-  // Acceptable time formats:
-  // mm:ss  Set the minutes and the seconds
-  // mmss   Set the minutes and the seconds
-  // :ss    Set the seconds, but leave the minutes alone
-  // ss     Set the seconds, but leave the minutes alone
-  // mm:    Set the minutes, but leave the seconds alone
-
-  // Find any colon the user entered
-  for ( ; *pp && *pp != ':' ; pp++ ) ;
-
-  // Here's how we recognize the different formats
-  // :00    pp == buf
-  // 0000   *(pp+1) == 0 && ibuf > 2
-  // 00:    *(pp+1) == 0
-  // 00:00  *pp=':'
-
-  if ( *pp==':' ) {
-    // nn:...  User entered minutes value
-    if ( pp > buf ) m0 = atoi(buf) ;
-
-    // :nn  User entered seconds value after colon
-    if ( pp[1]>0 ) s0 = atoi(pp+1);
-  }
-  else {
-    // ss or mmss
-    s0 = atoi(buf) ;
-    if ( ibuf > 2 ) {
-      // mmss
-      m0 = s0 / 100 ;
-      s0 %= 100 ;
-    }
-  }
-
-  ibuf = 0 ;
-
-  // Complain about bad input
-  if ( m0 > 59 || s0 > 59 )
-  {
-    p("  ** Bad time input ** ");
-    return false ;
-  }
-
-  // Set the clock time to the values the user entered
-  if ( m0 >= 0 ) setMinutes(m0);
-  if ( s0 >= 0 ) setSeconds(s0);
-
-  // If we changed the seconds value, reset the timer-tick to 00 milliseconds
-  if ( s0 >= 0 ) syncTime() ;
 
   return true ;
 }
@@ -154,21 +105,6 @@ bool timeEntry( char ch ) {
 // Read user input and act on it
 bool controlMode( char ch ) {
     switch ( ch ) {
-
-    // Left-arrow (Less-Than) slows down the clock for simulation runs
-    case '<': case ',': slowDown() ; return true ;
-
-    // Right-arrow (Greater-Than) speeds up the clock for simulation runs
-    case '>': case '.': speedUp() ; return true ;
-
-    // PLUS advances the digital clock minute
-    case '+': case '=': incMinutes() ; return true ;
-
-    // MINUS decrements the digital clock minute
-    case '_': case '-': decMinutes() ; return true ;
-
-    // 'Z' resets the digital clock seconds
-    case 'z': case 'Z': setSeconds(0) ; syncTime() ; return true ;
 
     // A, B and C manually force the A/B output pulses but do not affect the internal clock
     // A and B add to the force count for the A and B signals.  C adds to both signals.
@@ -197,7 +133,7 @@ void consoleService() {
     }
   }
 
-  timeChange |= controlMode(ch) ;
+//   timeChange |= controlMode(ch) ;
 
-  if ( timeChange ) { p(" -> %02d:%02d ", getMinutes(), getSeconds() );  }
+//   if ( timeChange ) { p(" -> %02d:%02d ", getMinutes(), getSeconds() );  }
 }

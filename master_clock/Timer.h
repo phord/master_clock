@@ -1,12 +1,12 @@
 // Timer.h
 //
 // Time wrappers
-//  
+//
 //    Master Clock - Drives an IBM Impulse Secondary clock movement
 //    using the International Business Machine Time Protocols,
 //    Service Instructions No. 230, April 1, 1938,Form 231-8884-0
-//    By Phil Hord,  This code is in the public domain Sept 9, 2013 
-//    
+//    By Phil Hord,  This code is in the public domain Sept 9, 2013
+//
 
 //________________________________________________________________
 // Tick counter
@@ -17,11 +17,6 @@
 // On the PC it is called by a simple clock watcher.
 //
 void ticker() ;
-
-void speedUp() ;
-void slowDown() ;
-
-void syncTime() ;    ///< Zero the tick counter to sync the clock tick
 
 int getTick() ;
 int elapsed( int timer ) ;

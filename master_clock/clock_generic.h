@@ -23,9 +23,6 @@
 //
 void ticker() ;
 
-void speedUp() ;
-void slowDown() ;
-
 //________________________________________________________________
 // User I/O
 //
@@ -66,19 +63,10 @@ void clockSetup();
 // Time accessors
 // Let other functions get and set the clock time
 
-int getMinutes() ;   ///< Return the current 'minutes' time on the clock
-int getSeconds() ;   ///< Return the current 'seconds' time on the clock
+#define MAX_TIME (12*60*60)
 
-void setMinutes( int minutes ) ; ///< Set the clock 'minutes' value
-void setSeconds( int seconds ) ; ///< Set the clock 'seconds' value
-
-void incMinutes( ) ;
-void incSeconds( ) ;
-
-void decMinutes( ) ;
-void decSeconds( ) ;
-
-void syncTime() ;    ///< Zero the tick counter to sync the clock tick
+int getWallTime() ;
+int getRealTime() ;
 
 //_____________________________________________________________________
 // Signal accessors

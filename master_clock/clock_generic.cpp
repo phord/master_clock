@@ -7,17 +7,19 @@
 
 //_____________________________________________________________________
 //                                                             INCLUDES
+#include <time.h>
 #include "Arduino.h"
 #include <stdarg.h>
 #include "console.h"
 #include "clock_generic.h"
 #include "Timer.h"
 #include "NtpServer.h"
+#include "TimeService.h"
 
 //_____________________________________________________________________
 //                                                           LOCAL VARS
 
-static int m, s ;              ///< Current minutes and seconds
+static unsigned walltime ;     ///< Current hours/minutes displayed on clock
 int a = LOW , b = LOW ;        ///< Desired A and B signal levels
 int aForce = 0 ;               ///< Force A pulse by operator control
 int bForce = 0 ;               ///< Force B pulse by operator control
@@ -41,28 +43,34 @@ enum {
 	fallTime = 4 ,     // 400ms fall time
 } ;
 
-
-//_____________________________________
-// Reset the tick counter to 0
-void syncTime() {
-  state = reset ;
-}
-
 //_____________________________________________________________________
 // Time accessors
 // Let other functions get and set the clock time
 
-int getMinutes() { return m; }
-int getSeconds() { return s; }
+// Get real time from system in seconds
+int getRealTime() {
+        auto now = time(nullptr);
+        return now % MAX_TIME;
+}
 
-void setMinutes( int minutes ) { m = minutes ; }
-void setSeconds( int seconds ) { s = seconds ; }
+// Get time displayed on clock in seconds
+int getWallTime() { return walltime * 60; }
 
-void incMinutes( ) { if (++m > 59) m = 0 ; }
-void incSeconds( ) { if (++s > 59) { s = 0 ; incMinutes() ; } }
+// Set time displayed on clock in seconds
+void setWallTime(int seconds) {
+        walltime = (seconds % MAX_TIME) / 60;
+}
 
-void decMinutes( ) { if (--m < 0) m = 59 ; }
-void decSeconds( ) { if (--s < 0) { s = 59 ; decMinutes() ; } }
+// Advance the time on the wall display clock
+void incMinutes() {
+        walltime++;
+        walltime %= MAX_TIME / 60;
+}
+
+// Set time displayed on clock to real time
+void resetWallTime() {
+        setWallTime(time(nullptr));
+}
 
 //_____________________________________________________________________
 // Signal accessors
@@ -80,13 +88,6 @@ bool getB() { return b ; }        // Read the last B-signal level
 // These functions actually implement the time protocol.
 
 //_____________________________________
-// Called once per second.  Advances second and minute counters.
-void markTime()
-{
-    incSeconds() ;
-}
-
-//_____________________________________
 // Implement the A-signal protocol.
 // Returns HIGH or LOW depending on what the A-signal output should
 // based on the current time.
@@ -95,12 +96,12 @@ void markTime()
 // every odd second between 10 and 50 during the 59th minute.
 //
 // Note: If 'aForce' is non-zero or pin D2 is high, return HIGH.
-int checkA() {
-     // Manual run based on switch input
-    if ( run_switch() ) return HIGH ;
-
+int checkA(unsigned t) {
     // Manual run based on serial input
     if ( aForce ) { aForce-- ; return HIGH ; }
+
+    unsigned int s = t % 60;
+    unsigned int m = (t / 60) % 60;
 
     // pulse once per minute
     if ( s == 0 ) return HIGH ;
@@ -123,12 +124,12 @@ int checkA() {
 // minute except for minutes 50 to 59.
 //
 // Note: If 'bForce' is non-zero, return HIGH.
-int checkB() {
-     // Manual run based on switch input
-    if ( run_switch() ) return HIGH ;
-
+int checkB(unsigned t) {
     // Manual run based on serial input
     if ( bForce ) { bForce-- ; return HIGH ; }
+
+    unsigned int s = t % 60;
+    unsigned int m = (t / 60) % 60;
 
     // pulse once per minute from 00 to 49
     if ( m > 49 ) return LOW ;
@@ -165,10 +166,65 @@ void toggleLed() {
   led = !led;
 }
 
+// The time difference when we're 30 minutes fast
+#define FAST_WAIT_THRESHOLD     (MAX_TIME - 30*60)
+
+bool haveWallTime = false;
+//_____________________________________
+// Advances second and minute counters.
+void markTime()
+{
+        static unsigned prev_t = 0;
+        auto now = getRealTime();
+        auto display = getWallTime() + 60;
+        auto delta = (MAX_TIME + now - display) % MAX_TIME;
+
+        if (prev_t == now) return;
+        prev_t = now;
+
+        if (!haveWallTime || !TimeService::hasBeenSynced()) {
+                // If we don't know the clock position, we can't catch up
+                delta = 0;
+        }
+
+        a = b = LOW;
+        if (run_switch()) {
+                // p(":RUN:");
+                a = b = HIGH;
+                resetWallTime();
+                haveWallTime = true;
+        }
+        else if (delta > FAST_WAIT_THRESHOLD) {
+                // Clock is fast, but it's less than 30 minutes fast.  Let's just wait for time to catch up
+                // p(":FAST %ld:", MAX_TIME-delta, MAX_TIME-FAST_WAIT_THRESHOLD);
+
+        } else if (delta > 60) {
+                // Clock is 2+ minutes slow. Run until we catch up.
+                // p(":SLOW %ld:", delta);
+                a = b = HIGH;
+                incMinutes();
+        } else {
+                // p(":ONTIME %ld:", delta);
+                a = checkA(now) ;
+                b = checkB(now) ;
+                if ((now % 60) == 0) incMinutes();
+        }
+
+}
+
+void clockSetup() {
+        auto t = readTime();
+        if (t>=0) {
+                haveWallTime = true;
+                setWallTime(t);
+        }
+}
+
 //_____________________________________
 // the service routine runs over and over again forever:
 void service() {
   static int subTimer = 0;       ///< State counter per 100ms
+  static int showTimer = 0;       ///< console output timer
 
   consoleService() ;
   NtpService() ;
@@ -179,26 +235,33 @@ void service() {
   case reset:
     subTimer = getTick() ;
   case rise:
-    a = checkA() ;
-    b = checkB() ;
+    markTime();
 
-    sendSignal( a , b ) ;        // Send output pulses (if any)
-    if (a||b) toggleLed();
+    if (a||b) {
+        sendSignal( a , b ) ;        // Send output pulses (if any)
+        toggleLed();
+        showTime();
+        subTimer = showTimer = getTick();
+        state = riseWait;
+    }
+    if ( elapsed(showTimer) >= 10 )
+    {
+        showTimer += 10 ;
+        showTime() ;                 // Report time and signals to serial port
+    }
 
-    showTime() ;                 // Report time and signals to serial port
-
-    state = riseWait;
     break ;
 
   case riseWait:
     if ( elapsed(subTimer) < riseTime ) break ;
-    subTimer += riseTime ;
+    subTimer = getTick();
     state = fall;
     break;
 
   case fall:
     sendSignal( LOW , LOW ) ;     // End output pulses
-    if (a||b) toggleLed();
+    subTimer = getTick();
+    toggleLed();
     showSignalDrop() ;
 
     state = fallWait;
@@ -208,7 +271,6 @@ void service() {
     if ( elapsed(subTimer) < fallTime ) break ;
     subTimer += fallTime ;
 
-    markTime() ;                 // Advance time
 
     state = rise;
     break;

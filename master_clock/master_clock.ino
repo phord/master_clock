@@ -64,15 +64,6 @@ char readKey()
   return (char) Serial.read();
 }
 
-unsigned long us_per_tick = 100000 ;
-void speedUp() {
-  us_per_tick /= 2 ;
-}
-
-void slowDown() {
-  us_per_tick *= 2 ;
-}
-
 // the setup routine runs once when you press reset:
 void setup() {
   Serial.begin(115200);
@@ -85,6 +76,8 @@ void setup() {
   pinMode(pulseB, OUTPUT);
   pinMode(BUILTIN_LED, OUTPUT);
   pinMode(RUN, INPUT_PULLUP); // Use pullup mode to default HIGH
+
+  clockSetup();
 }
 
 // the loop routine runs over and over again forever:
