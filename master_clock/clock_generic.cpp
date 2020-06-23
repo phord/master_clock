@@ -22,6 +22,7 @@
 
 static unsigned walltime ;     ///< Current hours/minutes displayed on clock
 int a = LOW , b = LOW ;        ///< Desired A and B signal levels
+int d = LOW ;                  ///< Desired D signal level
 int aForce = 0 ;               ///< Force A pulse by operator control
 int bForce = 0 ;               ///< Force B pulse by operator control
 
@@ -82,6 +83,7 @@ void sendPulseB() { ++bForce ; }
 
 bool getA() { return a ; }        // Read the last A-signal level
 bool getB() { return b ; }        // Read the last B-signal level
+bool getD() { return d ; }        // Read the last D-signal level
 
 //_____________________________________________________________________
 //                                                        TIME PROTOCOL
@@ -139,6 +141,22 @@ int checkB(unsigned t) {
     return LOW ;
 }
 
+//_____________________________________
+// Implement the D-signal protocol.
+// Returns HIGH or LOW depending on what the D-signal output should
+// based on the current time.
+//
+// The 'D' signal is raised once per minute at zero-seconds for each
+// minute.
+int checkD(unsigned t) {
+    unsigned int s = t % 60;
+
+    // pulse once per minute
+
+    if ( s == 0 ) return HIGH ;
+    return LOW ;
+}
+
 // Flicker the LED if something interesting has happened
 static int somethingHappened = 0;
 static bool led = true;
@@ -188,10 +206,10 @@ void markTime()
                 delta = 0;
         }
 
-        a = b = LOW;
+        a = b = d = LOW;
         if (run_switch()) {
                 // p(":RUN:");
-                a = b = HIGH;
+                a = b = d = HIGH;
                 resetWallTime();
                 haveWallTime = true;
         }
@@ -202,12 +220,13 @@ void markTime()
         } else if (delta > 60) {
                 // Clock is 2+ minutes slow. Run until we catch up.
                 // p(":SLOW %ld:", delta);
-                a = b = HIGH;
+                a = b = d = HIGH;
                 incMinutes();
         } else {
                 // p(":ONTIME %ld:", delta);
                 a = checkA(now) ;
                 b = checkB(now) ;
+                d = checkD(now) ;
                 if ((now % 60) == 0) incMinutes();
         }
 
@@ -246,8 +265,8 @@ void service() {
   case rise:
     markTime();
 
-    if (a||b) {
-        sendSignal( a , b ) ;        // Send output pulses (if any)
+    if (a||b||d) {
+        sendSignal( a , b , d ) ;        // Send output pulses (if any)
         toggleLed();
         showTime();
         subTimer = showTimer = getTick();
@@ -268,7 +287,7 @@ void service() {
     break;
 
   case fall:
-    sendSignal( LOW , LOW ) ;     // End output pulses
+    sendSignal( LOW , LOW , LOW ) ;     // End output pulses
     subTimer = getTick();
     toggleLed();
     showSignalDrop() ;

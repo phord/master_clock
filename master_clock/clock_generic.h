@@ -44,7 +44,7 @@ char readKey();
 // to 0.  Call the function sendSignal to actually raise or
 // lower each signal line.
 
-void sendSignal( int a, int b) ;
+void sendSignal( int a, int b, int d) ;
 
 int run_switch() ;
 
@@ -77,6 +77,7 @@ void sendPulseB() ;
 
 bool getA() ;        // Read the last A-signal level
 bool getB() ;        // Read the last B-signal level
+bool getD() ;        // Read the last D-signal level
 
 // LED service: LED usually tracks clock signal lines, but it flickers at 5Hz
 // to show other activity (network messages, time sync loss, etc.)

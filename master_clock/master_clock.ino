@@ -27,9 +27,10 @@
 /* NTP server machine */
 #include "NtpServer.h"
 
-// A and B signal pins
+// Input/Output signal pins
 const int pulseA = 14;
 const int pulseB = 12;
+const int pulseD = 13;
 const int RUN = D3;
 
 
@@ -42,10 +43,11 @@ int run_switch()
   return !digitalRead(RUN);
 }
 
-void sendSignal( int a, int b)
+void sendSignal( int a, int b, int d)
 {
   digitalWrite(pulseA, a);   // Send A pulses
   digitalWrite(pulseB, b);   // Send B pulses
+  digitalWrite(pulseD, d);   // Send D pulses
 }
 
 void sendString( const char * str )

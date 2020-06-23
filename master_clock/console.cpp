@@ -50,11 +50,12 @@ void showTime() {
   //-- Show the A/B pulse status
   if (getA()) p("A");
   if (getB()) p("B");
+  if (getD()) p("D");
 }
 
 // Report the A or B signal has dropped
 void showSignalDrop() {
-  p("%s", (getA()||getB())?"*":"");
+  p("%s", (getA()||getB()||getD())?"*":"");
 }
 
 static bool timeEntryMode = false ;
