@@ -198,6 +198,8 @@ void markTime()
         auto display = getWallTime() + 60;
         auto delta = (MAX_TIME + now - display) % MAX_TIME;
 
+        a = b = d = LOW;
+
         if (prev_t == now) return;
         prev_t = now;
 
@@ -206,7 +208,6 @@ void markTime()
                 delta = 0;
         }
 
-        a = b = d = LOW;
         if (run_switch()) {
                 // p(":RUN:");
                 a = b = d = HIGH;

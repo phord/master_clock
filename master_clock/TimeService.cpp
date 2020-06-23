@@ -27,7 +27,7 @@ static void settime_cb() {
         unsigned mm = (now  % 3600) / 60;
         unsigned ss = now % 60;
 
-        p("NTP time = %02u:%02u:%02u UTC\n", hh , mm , ss ); // print the time
+        p("\nNTP time = %02u:%02u:%02u UTC\n", hh , mm , ss ); // print the time
 }
 
 void TimeService::begin()
