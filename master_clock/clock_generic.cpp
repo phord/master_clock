@@ -150,7 +150,7 @@ static void ledService() {
   static int subTimer = 0;       ///< State counter per 100ms
   if (!subTimer) subTimer = getTick();
 
-  int ledTime = (somethingHappened == 1) ? 4 : 1;
+  int ledTime = (somethingHappened == 1) ? 10 : 1;
   if (elapsed(subTimer) < ledTime ) return ;
   subTimer += ledTime;
 
