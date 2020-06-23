@@ -16,8 +16,8 @@ public:
         // Do we consider the current time to be unreliable
         static bool isStale();
 
-        // Return the current localtime
-        static const tm* localtime();
+        // Return the current localtime as an epoch number
+        static time_t localtime();
 
         // Set the system time from some authoritative source
         void setTime(time_t epoch);

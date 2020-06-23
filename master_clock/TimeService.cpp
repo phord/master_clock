@@ -63,10 +63,14 @@ bool TimeService::isStale()
 }
 
 // Return the current localtime
-const tm* TimeService::localtime()
+time_t TimeService::localtime()
 {
         auto now = time(nullptr);
-        return ::localtime(&now);
+        auto tm = ::localtime(&now);
+
+        // Convert localtime structure to epoch time representation
+        time_t local = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
+        return local ;
 }
 
 // Set the system time from some authoritative source

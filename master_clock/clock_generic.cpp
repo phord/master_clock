@@ -50,7 +50,7 @@ enum {
 
 // Get real time from system in seconds
 int getRealTime() {
-        auto now = time(nullptr);
+        time_t now = TimeService::localtime();
         return now % MAX_TIME;
 }
 
@@ -70,7 +70,7 @@ void incMinutes() {
 
 // Set time displayed on clock to real time
 void resetWallTime() {
-        setWallTime(time(nullptr));
+        setWallTime(TimeService::localtime());
 }
 
 //_____________________________________________________________________
