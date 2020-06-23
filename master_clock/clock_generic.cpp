@@ -14,6 +14,7 @@
 #include "clock_generic.h"
 #include "Timer.h"
 #include "NtpServer.h"
+#include "TimeSave.h"
 #include "TimeService.h"
 
 //_____________________________________________________________________
@@ -210,6 +211,12 @@ void markTime()
                 if ((now % 60) == 0) incMinutes();
         }
 
+        // Once we know and saved the real time, assume we're in sync
+        if (!haveWallTime && TimeService::hasBeenSynced()) {
+                haveWallTime = saveTime();
+                if (haveWallTime) resetWallTime();
+        }
+
 }
 
 void clockSetup() {
@@ -217,6 +224,8 @@ void clockSetup() {
         if (t>=0) {
                 haveWallTime = true;
                 setWallTime(t);
+                t /= 60;
+                p("Clock face: %02d:%02d\n", t/60, t%60);
         }
 }
 
@@ -271,6 +280,8 @@ void service() {
     if ( elapsed(subTimer) < fallTime ) break ;
     subTimer += fallTime ;
 
+    // Save new clock time, if it has changed
+    saveTime();
 
     state = rise;
     break;
