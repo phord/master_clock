@@ -28,12 +28,17 @@ void p(const char *fmt, ... ){
         sendString(tmp);
 }
 
+  static int showTimer = -1;   ///< limit output to 1-per-Secondary
+
 // Print the current time and A/B signal levels on the console
 void showTime() {
   auto t = getRealTime();
   unsigned int s = t % 60;
   unsigned int m = (t / 60) % 60;
   unsigned int h = (t / 60 / 60) % 12;
+
+  if ( showTimer == s ) return;
+  showTimer = s;
 
   auto wt = getWallTime();
   unsigned int wm = (wt / 60) % 60;

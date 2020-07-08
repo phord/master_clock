@@ -253,7 +253,6 @@ void clockSetup() {
 // the service routine runs over and over again forever:
 void service() {
   static int subTimer = 0;       ///< State counter per 100ms
-  static int showTimer = 0;       ///< console output timer
 
   consoleService() ;
   NtpService() ;
@@ -269,15 +268,10 @@ void service() {
     if (a||b||d) {
         sendSignal( a , b , d ) ;        // Send output pulses (if any)
         toggleLed();
-        showTime();
-        subTimer = showTimer = getTick();
+        subTimer = getTick();
         state = riseWait;
     }
-    if ( elapsed(showTimer) >= 10 )
-    {
-        showTimer += 10 ;
-        showTime() ;                 // Report time and signals to serial port
-    }
+    showTime() ;                 // Report time and signals to serial port
 
     break ;
 
