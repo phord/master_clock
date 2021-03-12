@@ -35,8 +35,8 @@ const int RUN = D3;
 
 
 #include <TZ.h>
-#define MYTZ            TZ_America_Detroit              // Central time
-//#define MYTZ TZ_America_Los_Angeles
+//#define MYTZ            TZ_America_Detroit              // Central time
+#define MYTZ TZ_America_Los_Angeles
 
 int run_switch()
 {
