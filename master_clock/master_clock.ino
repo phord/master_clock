@@ -76,7 +76,7 @@ void setup() {
   // initialize the digital pin as an output.
   pinMode(pulseA, OUTPUT);
   pinMode(pulseB, OUTPUT);
-  pinMode(BUILTIN_LED, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RUN, INPUT_PULLUP); // Use pullup mode to default HIGH
 
   clockSetup();
