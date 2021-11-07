@@ -8,12 +8,14 @@
 
 #define POWERLOSS_FILE "clockface.txt"
 
+//#define DEBUG_POWERLOSS_FILE
+
 static int prev_time = -1;
 
 /** Note: I save multiple time values in the file and then only keep then
 last time added. I do this on the assumption that appending to the file
 will not cause extra wear-leveling that overwriting will. But I don't know
-enought about LittleFS to know if this is really true. Maybe this is a
+enough about LittleFS to know if this is really true. Maybe this is a
 waste of time.  And it does take time.  Mounting the FS or something in here
 takes many milliseconds. Probably we should yield in here or something.
 */
@@ -32,6 +34,10 @@ int readTime()
     p("File read failed: " POWERLOSS_FILE "\n");
   }
 
+#ifdef DEBUG_POWERLOSS_FILE
+  p("<size: %d>", file.size());
+#endif
+  
   if (file.size() > 20) {
         // read the last 20 bytes of the file.
         file.seek(file.size() - 20);
@@ -43,6 +49,9 @@ int readTime()
   while (file.available()) {
         // TODO: better value validation
         auto rt = file.parseInt() - 1;
+#ifdef DEBUG_POWERLOSS_FILE
+        p("<read: %d>", rt+1);
+#endif        
         if (rt >= 0 && rt < MAX_TIME/60) t = rt;
   }
   file.close();
@@ -84,15 +93,22 @@ bool saveTime()
 
   if (saved) {
     file.close();
-//     p("<save[%c] %d>", append?'a':'w', t);
     prev_time = t;
-//     auto verify = readTime() / 60;
-//     if (t != verify) p("wtf? read-time doesn't match: %d != %d\n", t, verify);
+#ifdef DEBUG_POWERLOSS_FILE
+    p("<save[%c] %d>", append?'a':'w', t+1);
+#endif
   } else {
     p("<save-failed>");
     file.close();
   }
   LittleFS.end();
+
+#ifdef DEBUG_POWERLOSS_FILE
+  if (saved) {
+    auto verify = readTime() / 60;
+    if (t != verify) p("wtf? read-time doesn't match: %d != %d\n", t, verify);
+  }
+#endif
 
   return saved;
 }
