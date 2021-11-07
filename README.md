@@ -10,7 +10,7 @@ January 2015 issue of Nuts and Volts:
 
 Note: You may need a subscription to use the link.
 
-An updated PDF is included in this repo at [Arduino based Master ClockV2.pdf](Arduino based Master ClockV2.pdf). It
+An updated PDF is included in this repo in `Arduino based Master ClockV2.pdf`. It
 details the protocol, original circuit designs, and some code usage.
 
 The project has grown since then to support ESP wifi controllers and Raspberry Pi embedded Linux computers.
