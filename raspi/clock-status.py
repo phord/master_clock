@@ -12,7 +12,7 @@ def main():
     displayTimeUserOverride = "user-time.dat"
 
     t = Time()
-    print("System time: {} sync={}".format(t, Time.ntp_syncronized()))
+    print("System time: {} sync={}".format(t, Time.ntp_synchronized()))
 
     display_time = Time.load(displayTimeCacheFile)
     try:

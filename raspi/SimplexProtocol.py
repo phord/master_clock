@@ -67,7 +67,7 @@ class Time:
         return self.H == other.H and self.M == other.M and self.S == other.S
 
     def reset(self, force_monotonic=False):
-        if not force_monotonic and Time.ntp_syncronized():
+        if not force_monotonic and Time.ntp_synchronized():
             t = localtime()
             self.H = t.tm_hour
             self.M = t.tm_min
@@ -112,12 +112,12 @@ class Time:
         return abs(Time.mem_synch_time - monotonic()) > delta
 
     @staticmethod
-    def force_ntp_syncronized(synced=True):
+    def force_ntp_synchronized(synced=True):
         Time.mem_synchronized = synced
         Time.mem_synch_time = monotonic()
 
     @staticmethod
-    def ntp_syncronized():
+    def ntp_synchronized():
         # Once we're synced, don't check again for 24 hours
         if Time.mem_synchronized and not Time.synch_time_elapsed(24 * 3600):
             return Time.mem_synchronized
@@ -127,13 +127,16 @@ class Time:
             return Time.mem_synchronized
 
         ofs = Time.ntp_offset()
-        # Assume we're in sync if the ntp time is with 10 seconds of our clock
+        # Assume we're in sync if the ntp time is within 10 seconds of our clock
         Time.mem_synchronized = ofs is not None and abs(ofs) < 10
         Time.mem_synch_time = monotonic()
         if Time.mem_synchronized:
             Time.set_base_time(Time())
+
+        # TODO: Don't report desynched if ofs is None until we retry a few times
         return Time.mem_synchronized
 
+    # Poll NTP server pool to find "real" time
     @staticmethod
     def ntp_offset(timeout=15):
         try:
@@ -145,7 +148,7 @@ class Time:
 
     def self_test(self):
         # Avoid hitting the network for tests
-        Time.force_ntp_syncronized(False)
+        Time.force_ntp_synchronized(False)
 
         a = Time(1,2,3)
         b = Time(5,6,7)
@@ -219,7 +222,7 @@ class Time:
         if face.trusted():
             raise "Trusted time that failed to load"
 
-        Time.force_ntp_syncronized(True)
+        Time.force_ntp_synchronized(True)
         face.reset()
         if not face.trusted():
             raise "Time not trusted after reset (are we out of sync?)"

@@ -83,6 +83,7 @@ def main():
     displayTimeUserOverride = "user-time.dat"
 
     if not signal.checkPower():
+        display_time = Time()
         con.showPowerLoss(display_time, display_time)
 
     print("Master clock start.  ", end='')
@@ -116,8 +117,7 @@ def main():
             sleep(0.1)
             continue
 
-
-        synced = Time.ntp_syncronized()
+        synced = Time.ntp_synchronized()
 
         # Assume display time matches synced time if we don't know otherwise
         if synced and not display_time.trusted():
