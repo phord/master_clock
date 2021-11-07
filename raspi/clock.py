@@ -89,13 +89,14 @@ def main():
     try:
         # Read last known displayed time from log file
         display_time = Time.load(displayTimeCacheFile)
-        print("Display time: {}".format(display_time))
+        print("Display time: {} (trusted={})".format(display_time, display_time.trusted()))
 
         # Use the clock display time as our RTC if we're not synched yet
         Time.set_base_time(display_time)
     except:
         display_time = Time()
-        print("")
+        display_time.trust(False)
+        print("Failed to parse display time in {}".format(displayTimeCacheFile))
         pass
 
     while True:
@@ -117,6 +118,10 @@ def main():
 
 
         synced = Time.ntp_syncronized()
+
+        # Assume display time matches synced time if we don't know otherwise
+        if synced and not display_time.trusted():
+            display_time.reset()
 
         if not signal.checkPower():
             # Power loss; mark time and wait for power to come back on
@@ -165,8 +170,9 @@ def main():
         con.showTime(display_time, a, b, msg)
 
         if a or b:
-            # Record clock time in case of power loss
-            display_time.save(displayTimeCacheFile)
+            if display_time.trusted():
+                # Record clock time in case of power loss
+                display_time.save(displayTimeCacheFile)
 
             # Send output pulses, if any
             signal.send(a, b)

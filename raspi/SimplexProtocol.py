@@ -25,12 +25,14 @@ class Time:
     mem_synch_time = 0
 
     base_time = 0
+    is_trusted = False
 
-    def __init__(self, h=None, m=0, s=0):
+    def __init__(self, h=None, m=0, s=0, t=False):
         if h is None:
             self.reset()
         else:
             (self.H,self.M,self.S) = (h,m,s)
+            self.trust(t)
         self.normalize()
 
     def normalize(self):
@@ -43,13 +45,14 @@ class Time:
             self.H = 12
 
     def __repr__(self):
-        return "<Time: H:{} M:{} S:{}>".format(self.H, self.M, self.S)
+        return "<Time: H:{} M:{} S:{} trusted:{}>".format(self.H, self.M, self.S, self.is_trusted)
 
     def __str__(self):
         return "{:02d}:{:02d}:{:02d}".format(self.H, self.M, self.S)
 
     def __add__(self, other):
-        return Time( self.H + other.H, self.M + other.M, self.S + other.S)
+        t = self.is_trusted or other.is_trusted
+        return Time( self.H + other.H, self.M + other.M, self.S + other.S, t)
 
     def __sub__(self, other):
         T = Time( self.H - other.H, self.M - other.M, self.S - other.S)
@@ -69,12 +72,23 @@ class Time:
             self.H = t.tm_hour
             self.M = t.tm_min
             self.S = t.tm_sec
+            self.trust(True)
         else:
             self.H = 0
             self.M = 0
             self.S = int(monotonic() - Time.base_time)
+            self.trust(False)
 
         self.normalize()
+
+    # TODO: Separate NTP time from display_time functions
+
+    # Track whether we trust this display_time to represent the clock face time
+    def trust(self, set=True):
+        self.is_trusted = set
+
+    def trusted(self):
+        return self.is_trusted
 
     def save(self, fname):
         fo = open( fname, "wb" )
@@ -85,6 +99,7 @@ class Time:
     def load(fname):
         t = pickle.load(open( fname, "rb" ) )
         t.normalize()
+        t.trust()
         return t
 
     @staticmethod
@@ -188,6 +203,26 @@ class Time:
         if int(t1 - t0) != 5:
             print( "Monotonic clock is not normal {}".format(t1-t0) )
             raise "Monotonic error"
+
+        try:
+            face = Time.load("/etc/passwd")
+            load_failed = False
+        except:
+            load_failed = True
+            face = Time()
+            face.trust(False)
+            pass
+
+        if not load_failed:
+            raise "Load(bogus-data) didn't fail"
+
+        if face.trusted():
+            raise "Trusted time that failed to load"
+
+        Time.force_ntp_syncronized(True)
+        face.reset()
+        if not face.trusted():
+            raise "Time not trusted after reset (are we out of sync?)"
 
         print("%s self_test passed                 " % (__class__) )
 
