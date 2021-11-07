@@ -4,7 +4,10 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/home/pi/clock-service
+ExecStart=/home/pi/master-clock/clock-service
+
+Restart=always
+RestartSec=60
 
 [Install]
 WantedBy=multi-user.target

@@ -2,3 +2,5 @@ clock
 *.pyc
 __pycache__/
 displayed-time.dat
+.history/
+.vscode/
