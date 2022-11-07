@@ -4,9 +4,7 @@ master_clock
 Master clock protocol driver for IBM slave clocks using Simplex Protocol from an ESP8266/Arduino or Raspberry pi.
 
 The original build of this master clock controller is described in the
-January 2015 issue of Nuts and Volts:
-
-    http://nutsvolts.texterity.com/nutsvolts/201501/\?folio\=32\&pg\=32\#pg32
+[January 2015 issue of Nuts and Volts](https://nutsvolts.texterity.com/nutsvolts/201501/?folio=32&pg=32#pg32) magazine.
 
 Note: You may need a subscription to use the link.
 
